@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌾 島嶼農場</title>
+<style>
+@font-face{font-family:'PangNiao';src:url('PangNiao.ttf') format('truetype');font-weight:normal;font-style:normal}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+body{font-family:'PangNiao','ZCOOL KuaiLe','Noto Sans TC','Microsoft JhengHei',sans-serif}
+:root{
+  --gold:#f0c040;--gold-d:rgba(240,192,64,0.2);--gold-g:rgba(240,192,64,0.4);
+  --panel:rgba(10,16,36,0.93);--border:rgba(255,255,255,0.13);--text:#f0f0f0;--muted:#8899aa;
+  --t1:#6ee7b7;--t2:#60a5fa;--t3:#c084fc;--t4:#f87171;
+  --r8:8px;--r14:14px;--r20:20px;--rf:9999px;
+}
+body{background:#0a1628;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Noto Sans',sans-serif;overflow:hidden;width:100vw;height:100vh;color:var(--text)}
+.hud-item{font-size:1.1rem}
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;z-index:2000;background:radial-gradient(ellipse at 50% 55%,#0c2040 0%,#050d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ls-stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ls-stars::before,.ls-stars::after{content:'';position:absolute;inset:0;background-image:radial-gradient(1px 1px at 15% 25%,#fff,transparent),radial-gradient(1px 1px at 55% 65%,#fffc,transparent),radial-gradient(1.5px 1.5px at 75% 15%,#fff,transparent),radial-gradient(1px 1px at 35% 75%,#fff8,transparent),radial-gradient(1px 1px at 85% 45%,#fff,transparent),radial-gradient(1px 1px at 45% 35%,#fffa,transparent);background-size:350px 280px;animation:twinkle 4s ease-in-out infinite alternate}
+.ls-stars::after{background-size:280px 350px;animation-delay:2s;opacity:.5}
+@keyframes twinkle{to{opacity:.35}}
+.ls-logo{font-size:3.8rem;margin-bottom:6px;animation:bob 3s ease-in-out infinite;filter:drop-shadow(0 0 20px #f0c04066)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ls-title{font-size:2rem;color:var(--gold);font-weight:700;letter-spacing:3px;text-shadow:0 0 24px var(--gold-g);margin-bottom:3px}
+.ls-sub{color:#5a8fc0;font-size:.88rem;margin-bottom:30px}
+.ls-box{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r20);padding:26px 30px;width:310px;backdrop-filter:blur(14px)}
+.ls-box input{width:100%;padding:10px 13px;margin-bottom:10px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:var(--r8);color:#fff;font-size:.93rem;outline:none;transition:border-color .2s}
+.ls-box input:focus{border-color:var(--gold)}
+.ls-box input::placeholder{color:rgba(255,255,255,0.28)}
+.ls-btn{width:100%;padding:12px;background:var(--gold);border:none;border-radius:var(--r8);font-size:.95rem;font-weight:700;color:#150f00;cursor:pointer;transition:all .2s;letter-spacing:1px;margin-top:4px}
+.ls-btn:hover{transform:translateY(-2px);box-shadow:0 5px 18px var(--gold-g)}
+.ls-note{color:var(--muted);font-size:.68rem;text-align:center;margin-top:10px;line-height:1.5}
+.ls-err{color:#f87171;font-size:.78rem;text-align:center;margin-top:8px;min-height:18px}
+
+/* ── ADMIN PANEL ── */
+#adminScreen{position:fixed;inset:0;z-index:1900;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:none;flex-direction:column;align-items:center;justify-content:center}
+.admin-box{background:#0e1726;border:2px solid #f87171;border-radius:var(--r20);padding:28px;width:min(600px,95vw);max-height:85vh;overflow-y:auto}
+.admin-box h2{color:#f87171;font-size:1.2rem;margin-bottom:16px}
+.admin-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.admin-stat{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r8);padding:12px;text-align:center}
+.admin-stat .asv{font-size:1.4rem;font-weight:700;color:var(--gold)}
+.admin-stat .asl{font-size:.65rem;color:var(--muted);margin-top:2px}
+.admin-player-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.admin-player-row{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:.82rem}
+.admin-btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.admin-btn{padding:7px 16px;border:1px solid var(--border);background:rgba(255,255,255,.06);border-radius:var(--r8);color:var(--text);font-size:.8rem;cursor:pointer;transition:all .15s}
+.admin-btn:hover{background:rgba(255,255,255,.14)}
+.admin-btn.danger{border-color:#f87171;color:#f87171}
+.admin-btn.success{border-color:#4ade80;color:#4ade80}
+.admin-close{float:right;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:2px 8px}
+
+/* ── GAME ── */
+#gameScreen{display:none;width:100vw;height:100vh;position:relative}
+#canvas{display:block;touch-action:none;cursor:crosshair}
+
+/* ── HUD ── */
+#hud{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);border-radius:var(--rf);padding:7px 16px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(16px);z-index:100;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.hud-item{display:flex;align-items:center;gap:4px;font-size:.83rem}
+.hud-val{font-weight:700;color:var(--gold);min-width:22px}
+#hudPlayer{color:#7dd3fc;font-size:.78rem;font-weight:600;padding-right:10px;border-right:1px solid var(--border)}
+#hudAdmin{color:#f87171;font-size:.7rem;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:4px;padding:1px 7px;margin-left:-6px}
+.hud-btn{background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:#fff;font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:4px}
+.hud-btn:hover{background:rgba(255,255,255,.15)}
+
+/* ── ONLINE ── */
+#onlinePanel{position:fixed;top:10px;right:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r14);padding:8px 11px;backdrop-filter:blur(16px);z-index:100;min-width:125px}
+.op-title{font-size:.6rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px}
+.op-row{display:flex;align-items:center;gap:5px;font-size:.76rem;padding:2px 0}
+.op-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0}
+.op-dot.self{background:var(--gold)}
+.op-dot.admin{background:#f87171}
+#wsStatus{font-size:.6rem;margin-top:5px;padding-top:4px;border-top:1px solid var(--border);color:var(--muted)}
+.ws-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#ef4444;margin-right:3px;vertical-align:middle}
+.ws-dot.on{background:#4ade80}
+
+/* ── TOOLBAR ── */
+#toolbar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);border-radius:var(--rf);padding:7px 12px;display:flex;gap:7px;backdrop-filter:blur(16px);z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.tbtn{width:50px;height:50px;border-radius:50%;border:2px solid var(--border);background:rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;transition:all .2s;font-size:1.3rem}
+.tbtn .tl{font-size:.48rem;color:var(--muted)}
+.tbtn:hover{background:rgba(255,255,255,.13);transform:scale(1.06)}
+.tbtn.active{border-color:var(--gold);background:var(--gold-d);transform:scale(1.13);box-shadow:0 0 13px var(--gold-g)}
+.tbtn.admin-tool{border-color:rgba(248,113,113,0.4)}
+.tsep{width:1px;background:var(--border);margin:5px 0}
+
+/* ── SEED BAR ── */
+#seedBar{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);border-radius:var(--rf);padding:5px 10px;display:none;gap:5px;backdrop-filter:blur(16px);z-index:100;align-items:center}
+.qseed{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);background:rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;font-size:1.05rem;position:relative}
+.qseed:hover{background:rgba(255,255,255,.13)}
+.qseed.active{border-color:var(--gold);background:var(--gold-d)}
+.qseed .qc{position:absolute;bottom:-1px;right:-1px;background:#0a1628;border-radius:3px;font-size:.42rem;color:var(--gold);padding:1px 2px}
+
+/* ── MODALS ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mo.open{display:flex}
+.md{background:#0e1726;border:1px solid var(--border);border-radius:var(--r20);padding:20px;max-width:520px;width:94vw;max-height:82vh;overflow-y:auto;color:var(--text)}
+.md-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.md-head h2{font-size:1.1rem;color:var(--gold)}
+.md-close{background:none;border:none;color:var(--muted);font-size:1.25rem;cursor:pointer;padding:3px 7px;border-radius:5px}
+.md-close:hover{background:rgba(255,255,255,.08);color:#fff}
+.tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:4px 13px;border-radius:var(--rf);border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .15s}
+.tab.active{background:var(--gold-d);border-color:var(--gold);color:var(--gold)}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.si{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r14);padding:9px 5px;text-align:center;cursor:pointer;transition:all .15s;position:relative}
+.si:hover{background:rgba(255,255,255,.09);border-color:var(--gold)}
+.si .sie{font-size:1.65rem;line-height:1.2}
+.si .sin{font-size:.62rem;color:var(--muted);margin:2px 0 1px}
+.si .sip{font-size:.7rem;color:var(--gold);font-weight:700}
+.si .sipr{font-size:.6rem;color:#4ade80}
+.si .sit{font-size:.56rem;color:var(--muted)}
+.tb{display:inline-block;padding:1px 6px;border-radius:4px;font-size:.58rem;font-weight:700;position:absolute;top:4px;right:4px}
+.tb1{background:rgba(110,231,183,.13);color:var(--t1);border:1px solid rgba(110,231,183,.28)}
+.tb2{background:rgba(96,165,250,.13);color:var(--t2);border:1px solid rgba(96,165,250,.28)}
+.tb3{background:rgba(192,132,252,.13);color:var(--t3);border:1px solid rgba(192,132,252,.28)}
+.tb4{background:rgba(248,113,113,.13);color:var(--t4);border:1px solid rgba(248,113,113,.28)}
+.bg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.bi{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r14);padding:9px 5px;text-align:center}
+.bi .bie{font-size:1.65rem}
+.bi .bin{font-size:.62rem;color:var(--muted);margin:2px 0}
+.bi .bic{font-size:.88rem;color:#4ade80;font-weight:700}
+.bi .biv{font-size:.6rem;color:var(--gold)}
+.bsell{margin-top:6px;padding:4px 8px;background:var(--gold);border:none;border-radius:5px;font-size:.66rem;font-weight:700;color:#150f00;cursor:pointer;width:100%}
+.bsell:hover{filter:brightness(1.1)}
+.btotal{background:rgba(240,192,64,.07);border:1px solid rgba(240,192,64,.2);border-radius:var(--r8);padding:9px 13px;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center;font-size:.83rem}
+.btotal span{color:var(--gold);font-weight:700}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(4px);background:rgba(10,16,36,.96);border:1px solid var(--border);color:#fff;padding:8px 20px;border-radius:var(--rf);font-size:.83rem;z-index:600;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── PARTICLES ── */
+.pt{position:fixed;pointer-events:none;border-radius:50%;z-index:400;animation:pf .65s ease-out forwards}
+@keyframes pf{to{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:2px}
+
+/* ── STARS ── */
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── MUSIC CONTROL ── */
+#musicControl{position:fixed;bottom:80px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r14);padding:8px 10px;backdrop-filter:blur(16px);z-index:100;display:flex;flex-direction:column;gap:6px;min-width:100px}
+.mc-title{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.mc-row{display:flex;align-items:center;gap:6px}
+.mc-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;transition:all .15s}
+.mc-btn:hover{background:rgba(255,255,255,.13)}
+.mc-btn.active{border-color:var(--gold);background:var(--gold-d)}
+.mc-vol{flex:1;height:4px;-webkit-appearance:none;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer}
+.mc-vol::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer}
+.mc-vol-icon{font-size:.75rem;color:var(--muted);min-width:14px}
+
+/* SOCIAL - HAPPY FARM STYLE */
+#socialBtn{position:fixed;bottom:75px;left:14px;background:linear-gradient(135deg,#ff9a56,#ff6b35);border:none;border-radius:50px;padding:10px 16px;z-index:150;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.9rem;color:#fff;box-shadow:0 4px 15px rgba(255,107,53,.4);transition:all .2s;font-weight:bold;font-family:inherit}
+#socialBtn:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(255,107,53,.5)}
+#socialBtn .avatar{min-width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid #fff}
+#socialBtn .name{font-weight:bold;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#7fff7f;display:inline-block;margin-right:4px;box-shadow:0 0 4px #7fff7f}
+#socialPanel{position:fixed;top:0;left:0;width:320px;height:100vh;background:linear-gradient(180deg,#87ceeb 0%,#98fb98 50%,#90ee90 100%);border-right:4px solid #ff9a56;z-index:200;display:none;flex-direction:column;box-shadow:4px 0 20px rgba(0,0,0,.3)}
+#socialPanel.open{display:flex}
+.sp-header{padding:16px 20px;background:linear-gradient(135deg,#ff9a56,#ff6b35);display:flex;justify-content:space-between;align-items:center}
+.sp-header h2{font-size:1.1rem;color:#fff;margin:0;text-shadow:0 2px 4px rgba(0,0,0,.2)}
+.sp-tabs{display:flex;background:rgba(255,255,255,.9);padding:8px 4px;gap:4px}
+.sp-tab{flex:1;padding:10px 6px;text-align:center;font-size:.85rem;cursor:pointer;color:#888;border-radius:20px;transition:all .2s;font-weight:bold}
+.sp-tab:hover{background:rgba(255,154,86,.2)}
+.sp-tab.active{background:linear-gradient(135deg,#ff9a56,#ff6b35);color:#fff;box-shadow:0 2px 8px rgba(255,107,53,.4)}
+.sp-content{flex:1;overflow-y:auto;padding:12px;background:rgba(255,255,255,.85)}
+.pf-card{background:linear-gradient(135deg,#fff 0%,#fffacd 100%);border:none;border-radius:20px;padding:20px;text-align:center;margin-bottom:12px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+.pf-avatar{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#ff9a56,#ff6b35);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;border:4px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.15)}
+.pf-name{font-size:1.1rem;font-weight:bold;color:#333;margin-bottom:4px}
+.pf-bio{font-size:.8rem;color:#888;margin:4px 0;font-style:italic}
+.pf-stats{display:flex;justify-content:center;gap:16px;margin-top:12px}
+.pf-stat{background:linear-gradient(135deg,#ff9a56,#ff6b35);border-radius:15px;padding:8px 14px;text-align:center;min-width:60px}
+.pf-stat .val{font-size:1.1rem;font-weight:bold;color:#fff}
+.pf-stat div:last-child{font-size:.65rem;color:rgba(255,255,255,.8)}
+.pf-btn{background:linear-gradient(135deg,#7cb342,#558b2f);border:none;border-radius:20px;padding:10px 20px;color:#fff;font-weight:bold;cursor:pointer;margin-top:12px;width:100%;box-shadow:0 3px 10px rgba(85,139,47,.4);font-size:.9rem}
+.pf-btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(85,139,47,.5)}
+.fl-item{display:flex;align-items:center;gap:10px;padding:12px;background:linear-gradient(135deg,#fff,#fffacd);border:none;border-radius:15px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.fl-item:hover{transform:translateX(4px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.fl-item .fla{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff9a56,#ff6b35);display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid #fff}
+.fl-item .fli{flex:1}
+.fl-item .fln{font-weight:bold;font-size:.9rem;color:#333}
+.fl-item .fld{font-size:.7rem;color:#888}
+.fl-btn{background:linear-gradient(135deg,#ff9a56,#ff6b35);border:none;border-radius:15px;padding:6px 10px;font-size:.75rem;cursor:pointer;color:#fff;font-weight:bold;box-shadow:0 2px 6px rgba(255,107,53,.3)}
+.fl-btn:hover{transform:scale(1.05)}
+.ct-box{background:linear-gradient(135deg,#fff,#fff8e7);border-radius:15px;padding:12px;height:260px;overflow-y:auto;margin-bottom:10px;font-size:.85rem;box-shadow:inset 0 2px 8px rgba(0,0,0,.05)}
+.ct-msg{margin-bottom:8px;padding:8px 12px;background:rgba(255,255,255,.8);border-radius:12px}
+.ct-msg .s{color:#ff6b35;font-weight:bold}
+.ct-msg .t{color:#444;margin-left:6px}
+.ct-msg .tm{color:#aaa;font-size:.6rem;margin-left:6px}
+.ct-input{display:flex;gap:8px}
+.ct-input input{flex:1;background:#fff;border:2px solid #ff9a56;border-radius:20px;padding:10px 14px;color:#333;font-size:.85rem;outline:none}
+.ct-input input:focus{border-color:#ff6b35}
+.ct-input button{background:linear-gradient(135deg,#7cb342,#558b2f);border:none;border-radius:20px;padding:10px 16px;color:#fff;font-weight:bold;cursor:pointer;box-shadow:0 3px 8px rgba(85,139,47,.4)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="ls-stars"></div>
+  <div class="ls-logo">🌾</div>
+  <div class="ls-title">島嶼農場</div>
+  <div class="ls-sub">開墾屬於你的破碎群島！</div>
+  <div class="ls-box">
+    <input id="inUser" type="text" placeholder="玩家名稱" maxlength="16" autocomplete="off"/>
+    <input id="inPass" type="password" placeholder="密碼"/>
+    <input id="inServer" type="text" placeholder="多人連線（預設 localhost:3000）" value="localhost:3000" autocomplete="off"/>
+    <button class="ls-btn" onclick="Auth.login()">🚜 進入遊戲</button>
+    <div class="ls-err" id="loginErr"></div>
+    <div class="ls-note">單機模式無需密碼與伺服器<br>連機請填入 ws://host:port</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminScreen">
+  <div class="admin-box">
+    <button class="admin-close" onclick="Admin.close()">✕</button>
+    <h2>🔴 管理員控制台</h2>
+    <div class="admin-stat-grid">
+      <div class="admin-stat"><div class="asv" id="adTiles">0</div><div class="asl">已生成地塊</div></div>
+      <div class="admin-stat"><div class="asv" id="adDecors">0</div><div class="asl">裝飾物</div></div>
+      <div class="admin-stat"><div class="asv" id="adPlayers">1</div><div class="asl">在線玩家</div></div>
+    </div>
+    <div id="adPlayerList" class="admin-player-list"></div>
+    <hr style="border-color:var(--border);margin:14px 0">
+    <h3 style="color:var(--gold);font-size:.9rem;margin-bottom:10px">🎵 環境控制</h3>
+    <div class="admin-btn-row" style="margin-bottom:14px">
+      <button class="admin-btn" id="adMusicBtn" onclick="Admin.toggleMusic()">🎵 開啟音樂</button>
+      <button class="admin-btn" onclick="Admin.skipToDay()">☀️ 跳到白天</button>
+      <button class="admin-btn" onclick="Admin.skipToNight()">🌙 跳到夜晚</button>
+      <button class="admin-btn" onclick="Admin.toggleDayCycle()">⏱️ 暫停晝夜</button>
+    </div>
+    <hr style="border-color:var(--border);margin:14px 0">
+    <h3 style="color:var(--gold);font-size:.9rem;margin-bottom:10px">🛠️ 世界控制</h3>
+    <div class="admin-btn-row">
+      <button class="admin-btn success" onclick="Admin.giveGold()">給予 💵1000</button>
+      <button class="admin-btn" onclick="Admin.clearDecors()">清除所有裝飾</button>
+      <button class="admin-btn" onclick="Admin.respawnDecors()">重生裝飾物</button>
+      <button class="admin-btn" onclick="Admin.teleportCenter()">傳送回中心</button>
+      <button class="admin-btn danger" onclick="Admin.resetWorld()">⚠ 重置世界</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOCIAL BTN -->
+<div id="socialBtn" onclick="Social.open()">
+  <div class="avatar" id="myAvatar">👤</div>
+  <div class="info">
+    <div class="name" id="myName">玩家</div>
+    <div style="font-size:.7rem;color:rgba(255,255,255,.9)"><span class="online-dot"></span><span id="onlineCount">1</span> 在線</div>
+  </div>
+</div>
+
+<!-- SOCIAL PANEL -->
+<div id="socialPanel">
+  <div class="sp-header">
+    <h2 style="font-size:1rem;margin:0;text-shadow:0 2px 4px rgba(0,0,0,.2)">🌻 快樂農場社交 🌻</h2>
+    <button onclick="Social.close()" style="background:rgba(255,255,255,.3);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:1rem;cursor:pointer">✕</button>
+  </div>
+  <div class="sp-tabs">
+    <div class="sp-tab active" onclick="Social.tab('profile')">🌾</div>
+    <div class="sp-tab" onclick="Social.tab('friends')">👥</div>
+    <div class="sp-tab" onclick="Social.tab('chat')">💬</div>
+    <div class="sp-tab" onclick="Social.tab('players')">🌍</div>
+  </div>
+  <div class="sp-content" id="spContent"></div>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen">
+  <canvas id="canvas"></canvas>
+
+  <div id="hud">
+    <span id="hudPlayer">👤</span>
+    <span id="hudAdmin" style="display:none">ADMIN</span>
+    <div class="hud-item" id="hudTime" title="當前時段">☀️</div>
+    <div class="hud-item">💵<span class="hud-val" id="hG">120</span></div>
+    <div class="hud-item">🌰<span class="hud-val" id="hD">0</span></div>
+    <div class="hud-item">🌳<span class="hud-val" id="hW">0</span></div>
+    <div class="hud-item"><span id="stoneIcon"></span><span class="hud-val" id="hS">0</span></div>
+    <button class="hud-btn" id="collectBtn" onclick="Player.collectProducts()" title="收集動物產物">🎁<span class="hud-val" id="hCollect">0</span></button>
+  </div>
+
+  <div id="onlinePanel">
+    <div class="op-title">🌐 在線玩家</div>
+    <div id="playerList"></div>
+    <div id="wsStatus"><span class="ws-dot" id="wsDot"></span><span id="wsTxt">單機模式</span></div>
+  </div>
+
+  <div id="musicControl">
+    <div class="mc-title">🎵 音樂</div>
+    <div class="mc-row">
+      <button class="mc-btn" id="mcPlay" onclick="Music.toggle()" title="播放/暫停">▶</button>
+      <button class="mc-vol-icon" id="mcVolIcon" onclick="Music.mute()">🔊</button>
+      <input type="range" class="mc-vol" id="mcVol" min="0" max="100" value="30" onchange="Music.setVolume(this.value/100)">
+    </div>
+  </div>
+
+  <div id="seedBar"></div>
+
+  <div id="toolbar">
+    <button class="tbtn active" id="tHoe" onclick="G.setTool('hoe')" title="鋤地[1]">⛏️<span class="tl">鋤地</span></button>
+    <button class="tbtn" id="tWater" onclick="G.setTool('water')" title="澆水[2]">💧<span class="tl">澆水</span></button>
+    <button class="tbtn" id="tSeed" onclick="UI.openSeedPicker()" title="種植[3]">🌱<span class="tl">種植</span></button>
+    <button class="tbtn" id="tHarvest" onclick="G.setTool('harvest')" title="採收[4]">🧺<span class="tl">採收</span></button>
+    <button class="tbtn" id="tFill" onclick="G.setTool('fill')" title="填海[5]">🏖️<span class="tl">填海</span></button>
+    <button class="tbtn" id="tCatch" onclick="G.setTool('catch')" title="捕捉[6]">🎯<span class="tl">捕捉</span></button>
+    <div class="tsep"></div>
+    <button class="tbtn" onclick="UI.openShop()" title="商店[S]">🏪<span class="tl">商店</span></button>
+    <button class="tbtn" onclick="UI.openBarn()" title="穀倉[B]">🏠<span class="tl">穀倉</span></button>
+    <button class="tbtn" onclick="UI.openShed()" title="畜棚[C]">🏡<span class="tl">畜棚</span></button>
+    <button class="tbtn" onclick="UI.openSheepdog()" title="牧羊犬[D]">🐕<span class="tl">牧羊犬</span></button>
+    <button class="tbtn admin-tool" id="tAdmin" onclick="Admin.open()" title="管理員" style="display:none">🔴<span class="tl">管理</span></button>
+  </div>
+
+  <!-- SHOP -->
+  <div class="mo" id="shopModal">
+    <div class="md">
+      <div class="md-head"><h2>🏪 種子商店</h2><button class="md-close" onclick="UI.closeModal('shopModal')">✕</button></div>
+      <div class="tabs" id="shopTabs"></div>
+      <div class="sg" id="shopGrid"></div>
+    </div>
+  </div>
+
+  <!-- BARN -->
+  <div class="mo" id="barnModal">
+    <div class="md">
+      <div class="md-head"><h2>🏠 穀倉</h2><button class="md-close" onclick="UI.closeModal('barnModal')">✕</button></div>
+      <div class="btotal">預估總價值：<span id="barnTotal">💵 0</span></div>
+      <div class="bg" id="barnGrid"></div>
+    </div>
+  </div>
+
+  <!-- SEED PICKER -->
+  <div class="mo" id="seedModal">
+    <div class="md">
+      <div class="md-head"><h2>🌱 選擇種子（即種即付）</h2><button class="md-close" onclick="UI.closeModal('seedModal')">✕</button></div>
+      <div class="tabs" id="seedTabs"></div>
+      <div class="sg" id="seedGrid"></div>
+    </div>
+  </div>
+
+  <!-- SHED -->
+  <div class="mo" id="shedModal">
+    <div class="md">
+      <div class="md-head"><h2>🏡 畜棚</h2><button class="md-close" onclick="UI.closeModal('shedModal')">✕</button></div>
+      <button class="hud-btn" onclick="Player.collectProducts()" style="margin-bottom:12px;width:100%">🎁 收集所有產物</button>
+      <div class="sg" id="shedGrid"></div>
+    </div>
+  </div>
+
+  <!-- SHEEPDOG -->
+  <div class="mo" id="sheepdogModal">
+    <div class="md">
+      <div class="md-head"><h2>🐕 牧羊犬保衛系統</h2><button class="md-close" onclick="UI.closeModal('sheepdogModal')">✕</button></div>
+      <div id="sheepdogInfo"></div>
+      <button class="hud-btn" id="upgradeSheepdogBtn" onclick="UI.upgradeSheepdog()" style="margin-top:12px;width:100%">⬆️ 升級牧羊犬</button>
+      <div style="margin-top:12px;font-size:.75rem;color:var(--muted)">
+        <p>💡 牧羊犬可以保護你的農場不被盜賊偷竊</p>
+        <p>⚠️ 等級越高，保護率越高</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════
+   ISLAND FARM v3 — Full Feature Set
+   ─ Multiplayer-ready (Net module)
+   ─ Infinite irregular islands with ocean gaps
+   ─ Canvas-drawn player avatars (visible on map)
+   ─ Tree respawn every 10 min (tilled tiles excluded)
+   ─ Rocks also spawn randomly
+   ─ Icons drawn via canvas text (guaranteed render)
+   ─ Admin system (chicken / farm)
+═══════════════════════════════════════════════════════════════ */
+
+// ════════════ CONSTANTS ════════════
+const TILE = 64;
+const CHUNK = 16;
+const TREE_RESPAWN_MS = 10 * 60 * 1000; // 10 min
+const ADMIN_USER = 'chicken';
+const ADMIN_PASS = 'farm';
+
+// Player colors for avatars
+const PLAYER_COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#34d399','#38bdf8','#818cf8','#e879f9'];
+
+// ════════════ PLANTS ════════════
+const PLANTS = [
+  {id:'lettuce',   name:'生菜',   e:'🥬', tier:1, sc:5,  sp:12, gt:5000},
+  {id:'onion',     name:'洋蔥',   e:'🧅', tier:1, sc:6,  sp:14, gt:6000},
+  {id:'garlic',    name:'大蒜',   e:'🧄', tier:1, sc:7,  sp:16, gt:6000},
+  {id:'potato',    name:'馬鈴薯', e:'🥔', tier:1, sc:8,  sp:18, gt:7000},
+  {id:'carrot',    name:'胡蘿蔔', e:'🥕', tier:1, sc:8,  sp:19, gt:7000},
+  {id:'corn',      name:'玉米',   e:'🌽', tier:1, sc:10, sp:23, gt:8000},
+  {id:'tomato',    name:'番茄',   e:'🍅', tier:1, sc:10, sp:24, gt:8000},
+  {id:'pear',      name:'梨',     e:'🍐', tier:1, sc:11, sp:26, gt:9000},
+  {id:'strawberry',name:'草莓',   e:'🍓', tier:2, sc:14, sp:36, gt:11000},
+  {id:'rose',      name:'玫瑰',   e:'🌹', tier:2, sc:15, sp:38, gt:11000},
+  {id:'sunflower', name:'向日葵', e:'🌻', tier:2, sc:14, sp:36, gt:11000},
+  {id:'orange',    name:'柳橙',   e:'🍊', tier:2, sc:13, sp:32, gt:10000},
+  {id:'apple',     name:'蘋果',   e:'🍎', tier:2, sc:13, sp:32, gt:10000},
+  {id:'banana',    name:'香蕉',   e:'🍌', tier:2, sc:15, sp:37, gt:11000},
+  {id:'lemon',     name:'檸檬',   e:'🍋', tier:2, sc:16, sp:40, gt:12000},
+  {id:'eggplant',  name:'茄子',   e:'🍆', tier:2, sc:15, sp:38, gt:11000},
+  {id:'pepper',    name:'辣椒',   e:'🌶', tier:2, sc:16, sp:40, gt:12000},
+  {id:'broccoli',  name:'花椰菜', e:'🥦', tier:2, sc:16, sp:40, gt:12000},
+  {id:'watermelon',name:'西瓜',   e:'🍉', tier:3, sc:22, sp:62, gt:15000},
+  {id:'pineapple', name:'鳳梨',   e:'🍍', tier:3, sc:25, sp:70, gt:16000},
+  {id:'cherry',    name:'櫻桃',   e:'🍒', tier:3, sc:22, sp:62, gt:14000},
+  {id:'peach',     name:'水蜜桃', e:'🍑', tier:3, sc:24, sp:68, gt:15000},
+  {id:'kiwi',      name:'奇異果', e:'🥝', tier:3, sc:20, sp:57, gt:14000},
+  {id:'grape',     name:'葡萄',   e:'🍇', tier:3, sc:26, sp:74, gt:17000},
+  {id:'mushroom',  name:'蘑菇',   e:'🍄', tier:3, sc:22, sp:63, gt:15000},
+  {id:'blueberry', name:'藍莓',   e:'🫐', tier:3, sc:24, sp:68, gt:16000},
+  {id:'avocado',   name:'酪梨',   e:'🥑', tier:4, sc:35, sp:105,gt:20000},
+  {id:'mango',     name:'芒果',   e:'🥭', tier:4, sc:38, sp:115,gt:22000},
+  {id:'coconut',   name:'椰子',   e:'🥥', tier:4, sc:42, sp:130,gt:24000},
+  {id:'cactus',    name:'仙人掌', e:'🌵', tier:4, sc:30, sp:88, gt:18000},
+];
+const PM = Object.fromEntries(PLANTS.map(p=>[p.id,p]));
+const TNAMES = ['','🌿普通','💧良品','⭐優質','💎傳說'];
+
+// ════════════ ANIMALS ════════════
+const ANIMALS = [
+  {id:'chicken', name:'雞', meat:15, product:'egg', productName:'雞蛋', productPrice:5, produceTime:30000},
+  {id:'cow', name:'牛', meat:60, product:'milk', productName:'牛奶', productPrice:20, produceTime:60000},
+  {id:'pig', name:'豬', meat:45, product:'bacon', productName:'培根', productPrice:15, produceTime:45000},
+  {id:'sheep', name:'羊', meat:50, product:'wool', productName:'羊毛', productPrice:12, produceTime:40000},
+  {id:'duck', name:'鴨', meat:20, product:'feather', productName:'羽毛', productPrice:8, produceTime:35000},
+  {id:'rabbit', name:'兔子', meat:35, product:'fur', productName:'兔毛', productPrice:10, produceTime:50000},
+];
+const AM = Object.fromEntries(ANIMALS.map(a=>[a.id,a]));
+const ANIMAL_EMOJI = {chicken:'🐔',cow:'🐄',pig:'🐷',sheep:'🐑',duck:'🦆',rabbit:'🐰'};
+
+// ════════════ SHEEPDOG ════════════
+const SHEEPDOG_LEVELS = [
+  {level:0, name:'無', cost:0, protect:0, desc:'沒有牧羊犬保護', gift:0},
+  {level:1, name:'小狗', cost:500, protect:15, desc:'🐕 可防15%被偷', gift:0},
+  {level:2, name:'大狗', cost:1500, protect:35, desc:'🐕‍🦺 可防35%被偷 + 偶爾帶禮物', gift:6},
+  {level:3, name:'牧羊犬', cost:4000, protect:60, desc:'🐕‍🦺 可防60%被偷 + 帶更多禮物', gift:9},
+  {level:4, name:'狼狗', cost:10000, protect:85, desc:'🐺 可防85%被偷 + 常帶禮物', gift:12},
+  {level:5, name:'藏獒', cost:25000, protect:98, desc:'🦁 完全保護 + 頻繁帶禮物', gift:15},
+];
+
+// ════════════ WORLD ════════════
+const World = (()=>{
+  const tiles = {};  // "wx,wy" → {type, crop, watered, waterAt}
+  const chunks = {}; // "cx,cy" → true
+  // decors: {wx, wy, type:'tree'|'rock', spawnedAt:timestamp, removed:bool}
+  const decors = [];
+  const decorMap = {}; // "wx,wy" → index in decors
+
+  /* ── Irregular island shape using layered Perlin-like noise ──
+     Multiple large "blob" seeds far apart create separated islands.
+     Each blob is smoothly rounded with noise on edges.
+     Sea gaps guaranteed by requiring minimum distance between blobs.
+  */
+  const BLOBS = [];
+  {
+    const rng = (s)=>{ let x=Math.sin(s)*43758.5453; return x-Math.floor(x); };
+    // Spread blobs far apart so islands are separated by sea
+    const grid = 80; // spacing between blob centers
+    for(let i=0;i<60;i++){
+      const col = i%8, row = Math.floor(i/8);
+      const bx = (col-3.5)*grid + (rng(i*7+1)-0.5)*40;
+      const by = (row-3.5)*grid + (rng(i*7+3)-0.5)*40;
+      // Random size — very varied (5..35)
+      const r = 5 + rng(i*13)*30;
+      // Shape irregularity — some blobs are very elongated
+      const ax = 0.5 + rng(i*17)*1.5;
+      const ay = 0.5 + rng(i*19)*1.5;
+      const angle = rng(i*23)*Math.PI;
+      if(rng(i*31) > 0.35) // 35% chance to skip → more ocean
+        BLOBS.push({bx,by,r,ax,ay,angle});
+    }
+  }
+
+  function _noise(x,y){
+    // Fast hash-based noise
+    let h = (x*374761393 + y*668265263) & 0x7fffffff;
+    h = ((h ^ (h>>16)) * 2246822519) & 0x7fffffff;
+    return (h ^ (h>>13)) / 0x7fffffff;
+  }
+  function _octave(x,y,oct=4,freq=0.12){
+    let v=0,a=1,t=0;
+    for(let i=0;i<oct;i++){
+      const fx=Math.floor(x*freq), fy=Math.floor(y*freq);
+      v+=_noise(fx,fy)*a; t+=a; a*=0.5; freq*=2.1;
+    }
+    return v/t;
+  }
+
+  function isLand(wx,wy){
+    let best=Infinity;
+    for(const b of BLOBS){
+      // Rotate tile coords into blob's local frame
+      const dx=wx-b.bx, dy=wy-b.by;
+      const cos=Math.cos(b.angle), sin=Math.sin(b.angle);
+      const lx=(dx*cos+dy*sin)/b.ax;
+      const ly=(-dx*sin+dy*cos)/b.ay;
+      const d=Math.sqrt(lx*lx+ly*ly)-b.r;
+      if(d<best) best=d;
+    }
+    // Add noise to edge for irregular coastlines
+    const n = (_octave(wx,wy)-0.5)*12;
+    return best+n < 0;
+  }
+
+  function _genChunk(cx,cy){
+    const key=`${cx},${cy}`;
+    if(chunks[key]) return;
+    chunks[key]=true;
+    for(let ty=0;ty<CHUNK;ty++) for(let tx=0;tx<CHUNK;tx++){
+      const wx=cx*CHUNK+tx, wy=cy*CHUNK+ty, k=`${wx},${wy}`;
+      if(tiles[k]) continue;
+      const land=isLand(wx,wy);
+      tiles[k]={type:land?'land':'sea',crop:null,watered:false,waterAt:0};
+      if(land){
+        const h=_noise(wx*7+3, wy*13+5);
+        if(h<0.08) _addDecor(wx,wy,'tree');       // ~8% tree
+        else if(h>=0.08 && h<0.14) _addDecor(wx,wy,'rock'); // ~6% rock
+      }
+    }
+  }
+
+  function _addDecor(wx,wy,type){
+    const k=`${wx},${wy}`;
+    if(decorMap[k]!=null) return;
+    const idx=decors.length;
+    decors.push({wx,wy,type,spawnedAt:Date.now(),removed:false});
+    decorMap[k]=idx;
+  }
+
+  function ensureVisible(x0,y0,x1,y1){
+    const cx0=Math.floor(x0/CHUNK)-1,cy0=Math.floor(y0/CHUNK)-1;
+    const cx1=Math.ceil(x1/CHUNK)+1, cy1=Math.ceil(y1/CHUNK)+1;
+    for(let cy=cy0;cy<=cy1;cy++) for(let cx=cx0;cx<=cx1;cx++) _genChunk(cx,cy);
+  }
+
+  function get(wx,wy){
+    const k=`${wx},${wy}`;
+    if(!tiles[k]){ _genChunk(Math.floor(wx/CHUNK),Math.floor(wy/CHUNK)); }
+    return tiles[k];
+  }
+
+  function getDecor(wx,wy){
+    const idx=decorMap[`${wx},${wy}`];
+    if(idx==null) return null;
+    return decors[idx];
+  }
+
+  function removeDecor(wx,wy){
+    const k=`${wx},${wy}`;
+    const idx=decorMap[k];
+    if(idx==null) return;
+    decors[idx].removed=true;
+    decors[idx].removedAt=Date.now();
+    delete decorMap[k];
+  }
+
+  // Tree respawn: every minute check removedAt trees — if 10 min passed AND tile is not tilled, respawn
+  function tickRespawn(){
+    const now=Date.now();
+    for(const d of decors){
+      if(!d.removed || d.type!=='tree') continue;
+      if(now-d.removedAt < TREE_RESPAWN_MS) continue;
+      const tile=get(d.wx,d.wy);
+      if(!tile || tile.type!=='land') continue; // only plain land (not tilled)
+      // Respawn
+      const k=`${d.wx},${d.wy}`;
+      if(decorMap[k]==null){
+        d.removed=false; d.spawnedAt=now; delete d.removedAt;
+        decorMap[k]=decors.indexOf(d);
+      }
+    }
+  }
+
+  const LAND_PAL=['#9ad464','#aada70','#b8e47c','#c6ed8a','#92ca58'];
+  function landColor(wx,wy){ return LAND_PAL[((wx*3+wy*7)&0x7fffffff)%LAND_PAL.length]; }
+
+  function stats(){ return {tiles:Object.keys(tiles).length, decors:decors.filter(d=>!d.removed).length}; }
+
+  // ── Animals ──
+  const animals = [];
+  const animalMap = {};
+  let animalIdCounter = 0;
+
+  function spawnAnimalsNear(cx,cy,radius){
+    const types=['chicken','chicken','duck','cow','pig','sheep','rabbit'];
+    let attempts=0;
+    while(animals.length<20 && attempts<30){
+      attempts++;
+      // Random position in a wider area
+      const wx=cx+Math.floor(Math.random()*40)-20;
+      const wy=cy+Math.floor(Math.random()*40)-20;
+      const tile=get(wx,wy);
+      if(!tile||tile.type!=='land') continue;
+      if(getDecor(wx,wy)) continue;
+      if(animalMap[`${wx},${wy}`]!=null) continue;
+      const type=types[Math.floor(Math.random()*types.length)];
+      animals.push({wx,wy,type,dir:Math.floor(Math.random()*4),moveTimer:Date.now()+Math.random()*5000,id:animalIdCounter++});
+      animalMap[`${wx},${wy}`]=animals.length-1;
+    }
+  }
+
+  function getAnimal(wx,wy){ const idx=animalMap[`${wx},${wy}`]; return idx!=null?animals[idx]:null; }
+
+  function removeAnimal(wx,wy){
+    const idx=animalMap[`${wx},${wy}`];
+    if(idx==null) return;
+    animals.splice(idx,1);
+    delete animalMap[`${wx},${wy}`];
+    for(let i=idx;i<animals.length;i++) animalMap[`${animals[i].wx},${animals[i].wy}`]=i;
+  }
+
+  function tickAnimalMovement(){
+    const now=Date.now();
+    for(const a of animals){
+      if(now<a.moveTimer) continue;
+      const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+      const [dx,dy]=dirs[a.dir];
+      const nwx=a.wx+dx, nwy=a.wy+dy;
+      const tile=get(nwx,nwy);
+      if(tile&&tile.type==='land'&&!getDecor(nwx,nwy)&&animalMap[`${nwx},${nwy}`]==null){
+        delete animalMap[`${a.wx},${a.wy}`];
+        a.wx=nwx; a.wy=nwy;
+        animalMap[`${nwx},${nwy}`]=animals.indexOf(a);
+      }
+      a.dir=Math.floor(Math.random()*4);
+      a.moveTimer=now+3000+Math.random()*4000;
+    }
+  }
+
+  return {get,ensureVisible,getDecor,removeDecor,decors,decorMap,tickRespawn,landColor,stats,isLand,_addDecor,tiles,animals,animalMap,getAnimal,removeAnimal,spawnAnimalsNear,tickAnimalMovement};
+})();
+
+// ════════════ SHEEPDOG TRACKING ════════════
+const Sheepdog = {
+  x:0, y:0, targetX:0, targetY:0, moveTimer:0, wandering:true,
+  
+  init(playerX, playerY){
+    this.x=playerX+(Math.random()-0.5)*5;
+    this.y=playerY+(Math.random()-0.5)*5;
+    this.targetX=this.x;
+    this.targetY=this.y;
+    this.moveTimer=Date.now()+3000;
+    this.wandering=true;
+  },
+  
+  tick(){
+    if(Player.sheepdog===0) return;
+    const now=Date.now();
+    if(now<this.moveTimer) return;
+    
+    if(this.wandering){
+      // Move to a random position near player area
+      this.targetX=this.x+(Math.random()-0.5)*8;
+      this.targetY=this.y+(Math.random()-0.5)*8;
+      this.wandering=false;
+    } else {
+      // Move towards target
+      const dx=this.targetX-this.x, dy=this.targetY-this.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>0.5){
+        this.x+=dx/dist*0.5;
+        this.y+=dy/dist*0.5;
+      } else {
+        this.wandering=true;
+      }
+      this.moveTimer=now+200;
+    }
+  },
+  
+  getGridPos(){
+    return {wx:Math.round(this.x), wy:Math.round(this.y)};
+  },
+  
+  isVisible(vr){
+    const gx=Math.round(this.x), gy=Math.round(this.y);
+    return gx>=vr.x0-1&&gx<=vr.x1+1&&gy>=vr.y0-1&&gy<=vr.y1+1;
+  },
+  
+  tryBringGift(){
+    if(Player.sheepdog<2) return; // Level 2+ can bring gifts
+    const level=Player.sheepdog;
+    const giftChance=level*3; // 6% at L2, 9% at L3, 12% at L4, 15% at L5
+    if(Math.random()*100>giftChance) return;
+    
+    const gifts=[
+      {item:'gold', amount:Math.floor(20+Math.random()*30*level), name:'金幣'},
+      {item:'gold', amount:Math.floor(50+Math.random()*50*level), name:'金幣'},
+      {item:'gold', amount:Math.floor(100+Math.random()*100*level), name:'大禮包'},
+    ];
+    const gift=gifts[Math.floor(Math.random()*gifts.length)];
+    Player.earn(gift.amount);
+    UI.updateHUD();
+    UI.toast(`🐕 ${SHEEPDOG_LEVELS[level].name}帶來了 ${gift.name}！💵+${gift.amount}`);
+    UI.particles(window.innerWidth/2,window.innerHeight/2,'#ffd700',12);
+  }
+};
+window.Sheepdog=Sheepdog;
+
+// ════════════ PLAYER ════════════
+const Player = {
+  name:'Farmer', isAdmin:false, color:'#38bdf8',
+  gold:120, dirt:0, wood:0, stone:0,
+  barn:{}, // 作物仓库
+  shed:{}, // 畜棚 - 动物产出 {animalType: {count, lastCollect}}
+  sheepdog:0, // 牧羊犬等级 0-5
+  tool:'hoe', seed:'corn',
+  quickSeeds:['corn','strawberry','watermelon','coconut'],
+  earn(g){this.gold+=g;UI.updateHUD()},
+  spend(g){this.gold-=g;UI.updateHUD()},
+  canAfford(g){return this.gold>=g},
+  addBarn(id,n=1){this.barn[id]=(this.barn[id]||0)+n},
+  addToShed(animalType,n=1){
+    if(!this.shed[animalType]) this.shed[animalType]={count:0,lastCollect:Date.now()};
+    this.shed[animalType].count+=n;
+  },
+  collectProducts(){
+    let total=0;
+    for(const [type,data] of Object.entries(this.shed)){
+      const animal=AM[type];
+      if(!animal) continue;
+      const elapsed=Date.now()-data.lastCollect;
+      if(elapsed<animal.produceTime) continue;
+      const products=Math.floor(elapsed/animal.produceTime)*data.count;
+      if(products>0){
+        this.barn[animal.product]=(this.barn[animal.product]||0)+products;
+        total+=products*animal.productPrice;
+        data.lastCollect=Date.now();
+      }
+    }
+    if(total>0){
+      this.earn(total);
+      UI.toast(`收集動物產物 +💵${total}`);
+    }
+  },
+  upgradeSheepdog(){
+    const nextLevel=this.sheepdog+1;
+    if(nextLevel>=SHEEPDOG_LEVELS.length){
+      UI.toast('牧羊犬已滿級！');
+      return false;
+    }
+    const cost=SHEEPDOG_LEVELS[nextLevel].cost;
+    if(!this.canAfford(cost)){
+      UI.toast(`💵不足！需 💵${cost}`);
+      return false;
+    }
+    this.spend(cost);
+    this.sheepdog=nextLevel;
+    const info=SHEEPDOG_LEVELS[nextLevel];
+    UI.toast(`🐕 升級 ${info.name}！保護 ${info.protect}%${info.level>=2?' 會帶禮物！':''}`);
+    return true;
+  },
+  getProtection(){
+    return SHEEPDOG_LEVELS[this.sheepdog]?.protect||0;
+  },
+  calcTheftLoss(baseAmount){
+    const protect=this.getProtection();
+    if(protect>=100) return 0;
+    const lossRate=(100-protect)/100;
+    const loss=Math.floor(baseAmount*lossRate*Math.random());
+    return loss;
+  },
+};
+
+// ════════════ SOCIAL ════════════
+const AVATARS=['👨','👩','🧑','👴','👵','🧔','👱','👲','🧕','🥷'];
+const Social={
+  tab:'profile',
+  profile:{bio:'我是快樂的農夫！',avatar:0,farmName:'我的農場'},
+  friends:{},
+  messages:[],
+  online:['玩家'],
+  
+  init(){
+    const s=localStorage.getItem('socialP');
+    if(s)try{this.profile=JSON.parse(s)}catch(e){}
+    const f=localStorage.getItem('socialF');
+    if(f)try{this.friends=JSON.parse(f)}catch(e){}
+    this.updateBtn();
+    this.simulate();
+  },
+  
+  save(){
+    localStorage.setItem('socialP',JSON.stringify(this.profile));
+    localStorage.setItem('socialF',JSON.stringify(this.friends));
+  },
+  
+  updateBtn(){
+    document.getElementById('myName').textContent=Player.name;
+    document.getElementById('myAvatar').textContent=AVATARS[this.profile.avatar];
+    document.getElementById('onlineCount').textContent=this.online.length;
+  },
+  
+  open(){
+    document.getElementById('socialPanel').classList.add('open');
+    this.render();
+  },
+  
+  close(){
+    document.getElementById('socialPanel').classList.remove('open');
+  },
+  
+  tab(t){
+    this.tab=t;
+    document.querySelectorAll('.sp-tab').forEach(e=>e.classList.remove('active'));
+    event.target.classList.add('active');
+    this.render();
+  },
+  
+  render(){
+    const c=document.getElementById('spContent');
+    switch(this.tab){
+      case 'profile': c.innerHTML=this.rProfile(); break;
+      case 'friends': c.innerHTML=this.rFriends(); break;
+      case 'chat': c.innerHTML=this.rChat(); break;
+      case 'players': c.innerHTML=this.rPlayers(); break;
+    }
+  },
+  
+  rProfile(){
+    const p=this.profile;
+    const h=Object.values(Player.barn||{}).reduce((a,b)=>a+b,0);
+    const a=Object.keys(Player.shed||{}).length;
+    return '<div class="pf-card">'+
+      '<div class="pf-avatar">'+AVATARS[p.avatar]+'</div>'+
+      '<div class="pf-name">🌻 '+Player.name+' 🌻</div>'+
+      '<div class="pf-bio">"'+p.bio+'"</div>'+
+      '<div class="pf-stats">'+
+        '<div class="pf-stat"><div class="val">'+Player.gold+'</div><div>💰 金幣</div></div>'+
+        '<div class="pf-stat"><div class="val">'+h+'</div><div>🌾 收成</div></div>'+
+        '<div class="pf-stat"><div class="val">'+a+'</div><div>🐄 動物</div></div>'+
+      '</div>'+
+      '<button class="pf-btn" onclick="Social.editProfile()">🌟 編輯我的資料</button>'+
+    '</div>'+
+    '<div style="text-align:center;margin-top:10px;font-size:.8rem;color:#888">🚜 快樂農場 v2.0</div>';
+  },
+  
+  editProfile(){
+    const p=this.profile;
+    let ah='';
+    for(let i=0;i<AVATARS.length;i++){
+      const sel=p.avatar===i?'3px solid #ff6b35':'2px solid #ddd';
+      ah+='<div onclick="Social.selAvatar('+i+')" style="width:40px;height:40px;border-radius:50%;border:'+sel+';display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;margin:4px;background:#fff">'+AVATARS[i]+'</div>';
+    }
+    document.getElementById('spContent').innerHTML='<div style="background:#fff;border-radius:15px;padding:16px;margin-bottom:12px">'+
+      '<h3 style="color:#ff6b35;margin:0 0 12px;font-size:1rem">🌈 編輯我的資料</h3>'+
+      '<div style="margin-bottom:12px"><div style="font-size:.8rem;color:#888;margin-bottom:8px">✨ 選擇頭像</div><div style="display:flex;flex-wrap:wrap;gap:4px">'+ah+'</div></div>'+
+      '<div style="margin-bottom:12px"><div style="font-size:.8rem;color:#888;margin-bottom:6px">🏠 農場名稱</div><input id="efName" value="'+p.farmName+'" style="width:100%;background:#f5f5f5;border:2px solid #ff9a56;border-radius:10px;padding:10px;color:#333;font-size:.9rem"></div>'+
+      '<div><div style="font-size:.8rem;color:#888;margin-bottom:6px">💬 個人簡介</div><input id="efBio" value="'+p.bio+'" maxlength="40" style="width:100%;background:#f5f5f5;border:2px solid #ff9a56;border-radius:10px;padding:10px;color:#333;font-size:.9rem"></div>'+
+      '</div>'+
+      '<button onclick="Social.saveProfile()" style="background:linear-gradient(135deg,#7cb342,#558b2f);border:none;border-radius:20px;padding:12px;width:100%;color:#fff;font-weight:bold;cursor:pointer;font-size:.95rem;box-shadow:0 4px 12px rgba(85,139,47,.4)">✅ 儲存資料</button>';
+  },
+  
+  selAvatar(i){
+    this.profile.avatar=i;
+    this.editProfile();
+  },
+  
+  saveProfile(){
+    this.profile.farmName=document.getElementById('efName').value||'我的農場';
+    this.profile.bio=document.getElementById('efBio').value||'我是快樂的農夫！';
+    this.save();
+    this.updateBtn();
+    this.tab='profile';
+    this.render();
+  },
+  
+  rFriends(){
+    const f=Object.entries(this.friends);
+    let h='<div style="background:linear-gradient(135deg,#ff9a56,#ff6b35);border-radius:15px;padding:12px 16px;margin-bottom:12px"><h3 style="color:#fff;margin:0;font-size:1rem">👥 我的好友們</h3></div>';
+    if(f.length===0){
+      h+='<div style="background:#fff;border-radius:15px;padding:30px;text-align:center"><div style="font-size:2rem;margin-bottom:8px">🌻</div><div style="color:#888">還沒有好友<br><span style="color:#ff6b35">去「玩家」分頁添加吧！</span></div></div>';
+    } else {
+      for(const [n,d] of f){
+        const on=this.online.includes(n);
+        h+='<div class="fl-item">'+
+          '<div class="fla">'+AVATARS[d.avatar||0]+'</div>'+
+          '<div class="fli"><div class="fln"><span class="'+(on?'online-dot':' ')+'"></span>'+n+'</div><div class="fld">'+(on?'🌟 在線':'💤 離線')+'</div></div>'+
+          '<button class="fl-btn" onclick="Social.visit(\''+n+'\')">🚪</button>'+
+          '<button class="fl-btn" onclick="Social.rmFriend(\''+n+'\')">❌</button>'+
+        '</div>';
+      }
+    }
+    return h;
+  },
+  
+  rChat(){
+    const msgs=this.messages.slice(-25).map(m=>'<div class="ct-msg"><span class="s">'+m.n+':</span><span class="t">'+m.t+'</span><span class="tm">'+this.ft(m.ti)+'</span></div>').join('');
+    return '<div style="background:#fff;border-radius:15px;padding:12px;margin-bottom:12px"><h3 style="color:#ff6b35;margin:0;font-size:1rem">💬 農場聊天室</h3></div>'+
+      '<div class="ct-box" id="ctBox">'+msgs+'</div>'+
+      '<div class="ct-input"><input id="ctIn" placeholder="說點什麼..." onkeydown="if(event.key==\'Enter\')Social.sendMsg()"><button onclick="Social.sendMsg()">📨</button></div>';
+  },
+  
+  sendMsg(){
+    const i=document.getElementById('ctIn');
+    const t=i.value.trim();
+    if(!t)return;
+    this.messages.push({n:Player.name,t,t:Date.now()});
+    i.value='';
+    this.render();
+    setTimeout(()=>{const b=document.getElementById('ctBox');if(b)b.scrollTop=b.scrollHeight;},50);
+  },
+  
+  rPlayers(){
+    let h='<div style="background:linear-gradient(135deg,#87ceeb,#98fb98);border-radius:15px;padding:12px 16px;margin-bottom:12px"><h3 style="color:#333;margin:0;font-size:1rem">🌍 在線的農夫們</h3></div>';
+    for(const n of this.online){
+      if(n===Player.name)continue;
+      const fr=!!this.friends[n];
+      h+='<div class="fl-item">'+
+        '<div class="fla">'+AVATARS[Math.floor(Math.random()*10)]+'</div>'+
+        '<div class="fli"><div class="fln"><span class="online-dot"></span>'+n+'</div><div class="fld">🏠 '+(this.friends[n]?.farmName||'玩家的農場')+'</div></div>'+
+        (fr?'<button class="fl-btn" onclick="Social.visit(\''+n+'\')">🚪</button>':'<button class="fl-btn" onclick="Social.addFriend(\''+n+'\')">🤝</button>')+
+        '<button class="fl-btn" onclick="Social.pm(\''+n+'\')">💬</button>'+
+      '</div>';
+    }
+    h+='<div style="background:#fff;border-radius:10px;padding:12px;text-align:center;margin-top:12px;font-size:.75rem;color:#888">🌻 點擊頭像可加好友或發私訊</div>';
+    return h;
+  },
+  
+  addFriend(n){
+    if(this.friends[n])return;
+    this.friends[n]={avatar:Math.floor(Math.random()*10),farmName:n+'的農場'};
+    this.save();
+    this.render();
+    UI.toast('已加 '+n+' 為好友');
+  },
+  
+  rmFriend(n){
+    delete this.friends[n];
+    this.save();
+    this.render();
+  },
+  
+  visit(n){
+    UI.toast('正在拜訪 '+n+'...');
+    this.close();
+  },
+  
+  pm(n){
+    const t=prompt('給 '+n+' 的私訊：');
+    if(t){
+      this.messages.push({n:Player.name,t:'[私]'+t,t:Date.now()});
+      UI.toast('已發送私訊');
+    }
+  },
+  
+  ft(t){
+    const d=new Date(t);
+    return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+  },
+  
+  simulate(){
+    // 聊天機器人已關閉（多人模式時可開啟）
+    /*
+    const bots=['小美','阿強','呆呆','米米'];
+    const msgs=['天氣真好！','收成好多！','有人要交易嗎？','升級了！'];
+    setInterval(()=>{
+      if(Math.random()<.25){
+        const b=bots[Math.floor(Math.random()*bots.length)];
+        if(!this.online.includes(b))this.online.push(b);
+        this.messages.push({n:b,t:msgs[Math.floor(Math.random()*msgs.length)],t:Date.now()});
+        if(this.messages.length>50)this.messages.shift();
+        this.updateBtn();
+      }
+    },12000);
+    */
+  }
+};
+window.Social=Social;
+
+// ════════════ REMOTE PLAYERS ════════════
+// In multiplayer: server sends {id,name,x,y,color} for each player
+// We render them on canvas as avatar circles
+const RemotePlayers = {
+  list: {}, // id → {name,wx,wy,color,tool,ts}
+  update(id,data){ this.list[id]={...data,ts:Date.now()}; },
+  remove(id){ delete this.list[id]; },
+  prune(){ // remove stale (>15s no update)
+    const now=Date.now();
+    for(const id in this.list){ if(now-this.list[id].ts>15000) delete this.list[id]; }
+  }
+};
+
+// ════════════ MUSIC ════════════
+const Music = (()=>{
+  let audio=null, playing=false, volume=0.3, muted=false;
+
+  function init(){
+    if(audio) return;
+    audio=new Audio();
+    audio.src='farm_music.mp3';
+    audio.loop=true;
+    audio.volume=muted?0:volume;
+  }
+
+  function start(){
+    init();
+    if(audio.paused){
+      audio.play().catch(e=>console.log('Audio play failed:',e));
+    }
+    playing=true;
+    if(document.getElementById('mcPlay')){
+      document.getElementById('mcPlay').textContent='⏸';
+      document.getElementById('mcPlay').classList.add('active');
+    }
+  }
+
+  function stop(){
+    if(audio) audio.pause();
+    playing=false;
+    if(document.getElementById('mcPlay')){
+      document.getElementById('mcPlay').textContent='▶';
+      document.getElementById('mcPlay').classList.remove('active');
+    }
+  }
+
+  function toggle(){
+    if(playing) stop(); else start();
+  }
+
+  function setVolume(v){
+    volume=Math.max(0,Math.min(1,v));
+    if(audio&&!muted) audio.volume=volume;
+  }
+
+  function mute(){
+    muted=!muted;
+    if(audio) audio.volume=muted?0:volume;
+    if(document.getElementById('mcVolIcon')) document.getElementById('mcVolIcon').textContent=muted?'🔇':'🔊';
+  }
+
+  return {start,stop,toggle,setVolume,mute,get playing(){return playing}};
+})();
+window.Music=Music;
+
+// ════════════ DAY/NIGHT ════════════
+const DayNight = (()=>{
+  let timeOfDay=0.25; // 0-1, 0.25 = 6am, 0.5 = noon, 0.75 = 6pm, 1/0 = midnight
+  let dayLength=120000; // 2 min per full day cycle
+  let timer=null;
+  let isNight=false;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:50;transition:background 1s';
+  document.body.appendChild(overlay);
+
+  function updateColors(){
+    const phase=Math.sin(timeOfDay*Math.PI);
+    const night=1-phase;
+    isNight=night>0.5;
+    
+    // Sky overlay for night (0-0.5 opacity)
+    const skyR=Math.round(13*night), skyG=Math.round(22*night), skyB=Math.round(40*night);
+    overlay.style.background=`rgba(${skyR},${skyG},${skyB},${night*0.6})`;
+    
+    // Star particles at night
+    if(night>0.3&&Math.random()<0.1) spawnStar();
+    
+    // Update HUD time indicator
+    const el=document.getElementById('hudTime');
+    if(el){
+      const ph=getPhase();
+      if(ph==='day'){ el.textContent='☀️'; el.style.color='#fbbf24'; }
+      else if(ph==='night'){ el.textContent='🌙'; el.style.color='#a5b4fc'; }
+      else if(ph==='dawn'){ el.textContent='🌅'; el.style.color='#fb923c'; }
+      else if(ph==='dusk'){ el.textContent='🌇'; el.style.color='#f97316'; }
+    }
+  }
+
+  function spawnStar(){
+    const star=document.createElement('div');
+    const size=1+Math.random()*2;
+    star.style.cssText=`position:fixed;width:${size}px;height:${size}px;background:#fff;border-radius:50%;pointer-events:none;z-index:51;left:${Math.random()*100}vw;top:${Math.random()*60}vh;animation:twinkle ${1+Math.random()*2}s ease-in-out forwards`;
+    document.body.appendChild(star);
+    setTimeout(()=>star.remove(),3000);
+  }
+
+  function tick(){
+    timeOfDay+=(1/dayLength)*1000;
+    if(timeOfDay>=1) timeOfDay=0;
+    updateColors();
+  }
+
+  function start(){
+    updateColors();
+    if(timer) clearInterval(timer);
+    timer=setInterval(tick,1000);
+  }
+
+  function getPhase(){
+    if(timeOfDay<0.2) return 'night';
+    if(timeOfDay<0.3) return 'dawn';
+    if(timeOfDay<0.7) return 'day';
+    if(timeOfDay<0.8) return 'dusk';
+    return 'night';
+  }
+
+  function setTime(t){
+    timeOfDay=Math.max(0,Math.min(1,t));
+    updateColors();
+  }
+
+  function skipToNight(){
+    timeOfDay=0.9;
+    updateColors();
+  }
+
+  function skipToDay(){
+    timeOfDay=0.4;
+    updateColors();
+  }
+
+  return {start,tick,getPhase,setTime,skipToNight,skipToDay,get isNight(){return isNight;}};
+})();
+window.DayNight=DayNight;
+
+// ════════════ NET ════════════
+const Net = (()=>{
+  let ws=null, connected=false;
+
+  function connect(url,name){
+    if(!url){_setStatus(false);return;}
+    try{
+      ws=new WebSocket(url);
+      ws.onopen=()=>{ connected=true; _setStatus(true); console.log('[CLIENT] WS onopen called!'); _send({type:'join',name,color:Player.color}); _startHeartbeat(); };
+      ws.onmessage=e=>{ 
+        let data = e.data;
+        if(data instanceof Blob){
+          const reader = new FileReader();
+          reader.onload = () => { 
+            console.log('[CLIENT] Blob decoded:', reader.result.substring(0,100));
+            try{ _handle(JSON.parse(reader.result)); }catch(_){} 
+          };
+          reader.readAsText(data);
+        } else {
+          try{ _handle(JSON.parse(data)); }catch(_){}
+        }
+      };
+      ws.onclose=()=>{ connected=false; _setStatus(false); };
+      ws.onerror=()=>{ connected=false; _setStatus(false); };
+    }catch(e){ _setStatus(false); }
+  }
+
+  let hbTimer;
+  function _startHeartbeat(){
+    clearInterval(hbTimer);
+    hbTimer=setInterval(()=>{
+      if(connected) _send({type:'pos',wx:Math.round(G.getCam().wx),wy:Math.round(G.getCam().wy)});
+    },2000);
+  }
+
+  function _send(obj){ if(ws&&connected) ws.send(JSON.stringify(obj)); }
+
+  function _handle(msg){
+    console.log('[CLIENT] _handle called with FULL:', JSON.stringify(msg));
+    switch(msg.type){
+      case 'patch': World.get(msg.wx,msg.wy); break;
+      case 'players': 
+        UI.renderOnlinePanel(msg.list);
+        msg.list.forEach(p=>{
+          RemotePlayers.update(p.id,p);
+        });
+        break;
+      case 'player_move': 
+        RemotePlayers.update(msg.id,msg); 
+        break;
+      case 'player_leave': RemotePlayers.remove(msg.id); break;
+      case 'game_action': 
+        G.handleRemoteAction(msg); 
+        break;
+      case 'world_state':
+        G.applyWorldState(msg.tiles, msg.animals);
+        break;
+    }
+  }
+
+  function send(type,payload){
+    const msg={type,...payload,player:Player.name,ts:Date.now()};
+    console.log('[CLIENT] send called:', type, 'msg:', JSON.stringify(msg));
+    G.handleAction(msg); // always handle locally
+    if(connected) _send(msg); // also send to server
+  }
+
+  function _setStatus(ok){
+    document.getElementById('wsDot').className='ws-dot'+(ok?' on':'');
+    document.getElementById('wsTxt').textContent=ok?'多人連線中':'單機模式';
+  }
+
+  return {connect,send,get connected(){return connected}};
+})();
+
+// ════════════ GAME ════════════
+const G = (()=>{
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  const T=TILE;
+
+  let cam={x:0,y:0}, zoom=1;
+  let dragging=false,dragDist=0,lastMX=0,lastMY=0,pinchD=0;
+  let running=false;
+
+  // ── Camera ──
+  function w2s(wx,wy){ return {x:(wx*T-cam.x)*zoom+canvas.width/2, y:(wy*T-cam.y)*zoom+canvas.height/2}; }
+  function s2w(sx,sy){ return {x:(sx-canvas.width/2)/zoom/T+cam.x/T, y:(sy-canvas.height/2)/zoom/T+cam.y/T}; }
+  function visRange(){ const tl=s2w(0,0),br=s2w(canvas.width,canvas.height),p=3; return {x0:Math.floor(tl.x)-p,y0:Math.floor(tl.y)-p,x1:Math.ceil(br.x)+p,y1:Math.ceil(br.y)+p}; }
+  function getCam(){ const c=s2w(canvas.width/2,canvas.height/2); return {wx:c.x,wy:c.y}; }
+
+  // ── Draw emoji centered on tile ──
+  // Uses canvas fillText with emoji string — guaranteed to render on all platforms
+  function drawEmoji(em, cx, cy, size){
+    ctx.save();
+    ctx.font=`${size}px Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(em, cx, cy+size*0.05); // slight offset for visual center
+    ctx.restore();
+  }
+
+  // ── Draw player avatar ──
+  function drawPlayer(wx,wy,name,color,isSelf){
+    const s=w2s(wx,wy);
+    const ts=T*zoom;
+    const cx=s.x+ts/2, cy=s.y+ts/2;
+    const r=Math.max(8,ts*0.28);
+
+    // Shadow
+    ctx.save();
+    ctx.globalAlpha=0.35;
+    ctx.fillStyle='#000';
+    ctx.beginPath();
+    ctx.ellipse(cx,cy+r*0.9,r*0.7,r*0.2,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // Body circle
+    ctx.save();
+    ctx.fillStyle=color;
+    ctx.strokeStyle=isSelf?'#fff':rgba(255,255,255,0.5);
+    ctx.lineWidth=isSelf?2:1.5;
+    ctx.beginPath();
+    ctx.arc(cx,cy-r*0.3,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // Hat (farmer hat shape)
+    if(r>10){
+      ctx.save();
+      ctx.fillStyle='#8B4513';
+      ctx.beginPath();
+      const hcx=cx, hcy=cy-r*0.3-r*0.7;
+      const hw=r*0.9, hh=r*0.5;
+      // Brim
+      ctx.ellipse(hcx,hcy+hh*0.8,hw*1.4,hh*0.25,0,0,Math.PI*2);
+      ctx.fill();
+      // Crown
+      ctx.fillRect(hcx-hw*0.6,hcy-hh*0.5,hw*1.2,hh);
+      ctx.restore();
+    }
+
+    // Name tag
+    if(zoom>0.5&&r>8){
+      const nameTag=isSelf?`★ ${name}`:name;
+      const tagFontSize=Math.max(10,r*0.75);
+      ctx.save();
+      ctx.font=`${tagFontSize}px sans-serif`;
+      ctx.textAlign='center';
+      ctx.textBaseline='bottom';
+      const tw=ctx.measureText(nameTag).width;
+      ctx.fillStyle='rgba(0,0,0,0.55)';
+      roundRect(ctx,cx-tw/2-4,cy-r*1.5-tagFontSize-3,tw+8,tagFontSize+4,4);
+      ctx.fill();
+      ctx.fillStyle=isSelf?'#fde68a':'#e0f2fe';
+      ctx.fillText(nameTag,cx,cy-r*1.5-1);
+      ctx.restore();
+    }
+  }
+
+  function rgba(r,g,b,a){ return `rgba(${r},${g},${b},${a})`; }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  // ── Main render loop ──
+  function _draw(){
+    if(!running) return;
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+
+    // Deep ocean
+    ctx.fillStyle='#0d4f6e';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Subtle ocean shimmer
+    const shimmerPhase=Date.now()*0.00045;
+    ctx.fillStyle='rgba(255,255,255,0.025)';
+    for(let i=0;i<5;i++){
+      const wx=(Math.sin(shimmerPhase+i*1.7)*3)*T, wy=(Math.cos(shimmerPhase+i*2.3)*2)*T;
+      const s=w2s(wx/T,wy/T);
+      ctx.fillRect(0,s.y,canvas.width,1.5);
+    }
+
+    const vr=visRange();
+    World.ensureVisible(vr.x0,vr.y0,vr.x1,vr.y1);
+    const ts=T*zoom;
+
+    // ── Tiles (land, sea, tilled) ──
+    for(let wy=vr.y0;wy<=vr.y1;wy++){
+      for(let wx=vr.x0;wx<=vr.x1;wx++){
+        const tile=World.get(wx,wy);
+        const s=w2s(wx,wy);
+        const px=Math.floor(s.x), py=Math.floor(s.y), pw=Math.ceil(ts)+1, ph=Math.ceil(ts)+1;
+
+        if(tile.type==='sea'){
+          const shallow=_nearLand(wx,wy);
+          ctx.fillStyle=shallow?'#1a7fa0':'#0d4f6e';
+          ctx.fillRect(px,py,pw,ph);
+          if(zoom>0.6){
+            const wv=Math.sin((wx+wy)*0.6+Date.now()*0.001);
+            if(wv>0.6){ ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fillRect(px,py+Math.round(ph*0.4),pw,1); }
+          }
+        } else if(tile.type==='land'){
+          ctx.fillStyle=World.landColor(wx,wy);
+          ctx.fillRect(px,py,pw,ph);
+          ctx.fillStyle='rgba(0,0,0,0.04)';
+          ctx.fillRect(px,py+ph-2,pw,2);
+          ctx.fillRect(px+pw-2,py,2,ph);
+        } else if(tile.type==='tilled'){
+          ctx.fillStyle=tile.watered?'#3d1e08':'#6b4020';
+          ctx.fillRect(px,py,pw,ph);
+          if(zoom>0.5){
+            ctx.fillStyle=tile.watered?'rgba(0,0,0,0.2)':'rgba(0,0,0,0.15)';
+            for(let r=0;r<3;r++) ctx.fillRect(px+2,py+Math.round(ph*(r+1)/4),pw-4,1);
+          }
+        }
+
+        if(zoom>0.5){
+          ctx.strokeStyle='rgba(0,0,0,0.055)';
+          ctx.lineWidth=0.5;
+          ctx.strokeRect(px,py,pw,ph);
+        }
+      }
+    }
+
+    // ── Decorations (trees & rocks) ──
+    const decorFontSize=Math.max(10,ts*0.52);
+    for(const d of World.decors){
+      if(d.removed) continue;
+      if(d.wx<vr.x0||d.wx>vr.x1||d.wy<vr.y0||d.wy>vr.y1) continue;
+      const tile=World.get(d.wx,d.wy);
+      if(tile.type!=='land') continue;
+      const s=w2s(d.wx,d.wy);
+      const px=Math.floor(s.x), py=Math.floor(s.y), pw=Math.ceil(ts)+1, ph=Math.ceil(ts)+1;
+      if(d.type==='tree'){
+        drawEmoji('🌲', px+pw/2, py+ph/2, decorFontSize);
+      } else {
+        const cx=px+pw/2, cy=py+ph/2;
+        ctx.fillStyle='#607d8b';ctx.beginPath();ctx.ellipse(cx,cy+ts*0.1,ts*0.35,ts*0.28,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#78909c';ctx.beginPath();ctx.ellipse(cx-ts*0.05,cy-ts*0.05,ts*0.28,ts*0.22,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#90a4ae';ctx.beginPath();ctx.ellipse(cx-ts*0.12,cy-ts*0.12,ts*0.12,ts*0.1,0,0,Math.PI*2);ctx.fill();
+      }
+    }
+
+    // ── Animals ──
+    const animalEmojis={chicken:'🐔',cow:'🐄',pig:'🐷',sheep:'🐑',duck:'🦆',rabbit:'🐰'};
+    const animalFontSize=Math.max(12,ts*0.55);
+    for(const a of World.animals){
+      if(a.wx<vr.x0||a.wx>vr.x1||a.wy<vr.y0||a.wy>vr.y1) continue;
+      const tile=World.get(a.wx,a.wy);
+      if(!tile||tile.type==='sea') continue;
+      const s=w2s(a.wx,a.wy);
+      const px=Math.floor(s.x), py=Math.floor(s.y), pw=Math.ceil(ts)+1, ph=Math.ceil(ts)+1;
+      drawEmoji(animalEmojis[a.type]||'🐾', px+pw/2, py+ph/2, animalFontSize);
+    }
+
+    // ── Sheepdog ──
+    if(Player.sheepdog>0&&Sheepdog.isVisible(vr)){
+      const gx=Math.round(Sheepdog.x), gy=Math.round(Sheepdog.y);
+      const s=w2s(gx,gy);
+      const px=Math.floor(s.x), py=Math.floor(s.y), pw=Math.ceil(ts)+1, ph=Math.ceil(ts)+1;
+      const dogEmojis={1:'🐕',2:'🐕',3:'🐕‍🦺',4:'🐕‍🦺',5:'🦁'};
+      const dogLevel=Math.min(Player.sheepdog,5);
+      const dogFontSize=Math.max(14,ts*0.6);
+      drawEmoji(dogEmojis[dogLevel]||'🐕', px+pw/2, py+ph/2, dogFontSize);
+    }
+
+    // ── Crops (drawn last = on top) ──
+    const cropFontSize=Math.max(11,ts*0.5);
+    for(let wy=vr.y0;wy<=vr.y1;wy++){
+      for(let wx=vr.x0;wx<=vr.x1;wx++){
+        const tile=World.get(wx,wy);
+        if(!tile||tile.type!=='tilled'||!tile.crop) continue;
+        const plant=PM[tile.crop.id];
+        if(!plant) continue;
+        const s=w2s(wx,wy);
+        const px=Math.floor(s.x), py=Math.floor(s.y), pw=Math.ceil(ts)+1, ph=Math.ceil(ts)+1;
+        const elapsed=tile.watered?(Date.now()-tile.crop.waterAt+tile.crop.elapsed):tile.crop.elapsed;
+        const prog=Math.min(elapsed/plant.gt,1);
+        tile.crop.mature=prog>=1;
+        const em=prog<0.25?'🌱':prog<0.6?'🌿':prog<1?'🌾':plant.e;
+        if(tile.crop.id==='blueberry'&&prog>=1){
+          const cx2=px+pw/2, cy2=py+ph/2, r=cropFontSize*0.3;
+          const bs=[{x:-r*0.5,y:-r*0.3},{x:r*0.5,y:-r*0.3},{x:0,y:r*0.2},{x:-r*0.7,y:r*0.5},{x:r*0.7,y:r*0.5}];
+          ctx.fillStyle='#2d5a27'; ctx.beginPath(); ctx.ellipse(cx2,cy2-r*0.8,r*0.35,r*0.2,0,0,Math.PI*2); ctx.fill();
+          for(const b of bs){ ctx.fillStyle='#4f66b8'; ctx.beginPath(); ctx.arc(cx2+b.x,cy2+b.y,r*0.4,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#6b8ae0'; ctx.beginPath(); ctx.arc(cx2+b.x-r*0.1,cy2+b.y-r*0.1,r*0.12,0,Math.PI*2); ctx.fill(); }
+        } else {
+          drawEmoji(em, px+pw/2, py+ph/2, cropFontSize);
+        }
+        if(zoom>0.45&&prog<1){
+          ctx.fillStyle='rgba(0,0,0,0.4)';
+          ctx.fillRect(px+2,py+ph-5,pw-4,4);
+          ctx.fillStyle=prog>0.6?'#7aff50':'#ffd740';
+          ctx.fillRect(px+2,py+ph-5,(pw-4)*prog,4);
+        }
+      }
+    }
+
+    requestAnimationFrame(_draw);
+  }
+
+  function _nearLand(wx,wy){
+    for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){
+      if(dx===0&&dy===0) continue;
+      const t=World.get(wx+dx,wy+dy);
+      if(t&&t.type!=='sea') return true;
+    }
+    return false;
+  }
+
+  // ── Tile Action Handler ──
+  function handleAction(msg){
+    const {type,wx,wy,sx,sy}=msg;
+    const tile=World.get(wx,wy);
+    if(!tile) return;
+
+    if(type==='hoe'){
+      if(tile.type==='land'){
+        const dec=World.getDecor(wx,wy);
+        if(dec){
+          World.removeDecor(wx,wy);
+          if(dec.type==='tree'){ Player.wood++; UI.toast('🌳 獲得木材！'); UI.particles(sx,sy,'#8B4513',10); }
+           else { Player.stone++; UI.toast('獲得石頭！'); UI.particles(sx,sy,'#999',10); }
+          UI.updateHUD(); return;
+        }
+        tile.type='tilled'; tile.watered=false; tile.crop=null;
+        Player.dirt++; UI.updateHUD();
+        UI.toast('🌰 獲得泥土！'); UI.particles(sx,sy,'#6b4020',10);
+      } else if(tile.type==='tilled'){ UI.toast('已是耕地！'); }
+      else { UI.toast('需先填海才能耕作！'); }
+
+    } else if(type==='fill'){
+      if(tile.type==='sea'){
+        if(Player.dirt<5){ UI.toast(`填海需 5 泥土（現有 ${Player.dirt}）`); return; }
+        Player.dirt-=5; tile.type='land'; tile.crop=null; tile.watered=false;
+        UI.updateHUD(); UI.toast('✅ 填海成功！'); UI.particles(sx,sy,'#7db8e8',12);
+      } else UI.toast('這裡不是海！');
+
+    } else if(type==='water'){
+      if(tile.type==='tilled'){
+        if(!tile.watered){
+          tile.watered=true; tile.waterAt=Date.now();
+          if(tile.crop){ tile.crop.waterAt=Date.now(); }
+          UI.toast('💧 澆水完成！'); UI.particles(sx,sy,'#38bdf8',10);
+        } else UI.toast('已澆過水！');
+      } else UI.toast('需要耕地才能澆水！');
+
+    } else if(type==='plant'){
+      if(tile.type==='tilled'&&!tile.crop){
+        const plant=PM[msg.plantId];
+        if(!plant) return;
+        if(!Player.canAfford(plant.sc)){ UI.toast(`金幣不足（需 💵${plant.sc}）`); return; }
+        Player.spend(plant.sc);
+        tile.crop={id:msg.plantId,elapsed:0,waterAt:tile.watered?Date.now():0,mature:false};
+        UI.toast(`🌱 種下 ${plant.name}（-💵${plant.sc}）`);
+        UI.particles(sx,sy,'#84cc16',8);
+      } else if(tile.type!=='tilled') UI.toast('需要耕地！');
+      else UI.toast('此地已有作物！');
+
+    } else if(type==='harvest'){
+      if(tile.crop&&tile.crop.mature){
+        const plant=PM[tile.crop.id];
+        Player.earn(plant.sp);
+        Player.addBarn(tile.crop.id);
+        tile.crop=null; tile.watered=false;
+        UI.toast(`${plant.e} 採收 ${plant.name} +💵${plant.sp}`);
+        UI.particles(sx,sy,'#fbbf24',14);
+      } else if(tile.crop) UI.toast('作物未成熟！');
+      else UI.toast('這裡沒有作物！');
+
+    } else if(type==='catch'){
+      const animal=World.getAnimal(wx,wy);
+      if(animal){
+        const a=AM[animal.type];
+        World.removeAnimal(wx,wy);
+        Player.addToShed(animal.type,1);
+        UI.toast(`捕捉 ${a.name}！放到畜棚，記得收集產物`);
+        UI.particles(sx,sy,'#fb923c',12);
+      } else UI.toast('這裡沒有動物！');
+    }
+  }
+
+  // ── Apply World State (from server) ──
+  function applyWorldState(tiles, animals){
+    console.log('[CLIENT] Applying world state:', Object.keys(tiles||{}).length, 'tiles,', (animals||[]).length, 'animals');
+    if(tiles){
+      for(const key in tiles){
+        const [wx, wy] = key.split(',').map(Number);
+        const tile = World.get(wx, wy);
+        if(tile){
+          const serverTile = tiles[key];
+          if(serverTile.type) tile.type = serverTile.type;
+          if(serverTile.watered !== undefined) tile.watered = serverTile.watered;
+          if(serverTile.crop !== undefined) tile.crop = serverTile.crop;
+        }
+      }
+    }
+    if(animals){
+      for(const a of animals){
+        World.addAnimal(a.type, a.wx, a.wy);
+      }
+    }
+    UI.toast('🌍 世界狀態同步完成');
+  }
+
+  // ── Remote Action Handler (from other players) ──
+  function handleRemoteAction(msg){
+    console.log('[CLIENT] handleRemoteAction called:', msg.action, 'player:', msg.playerName, 'isMe:', msg.playerName===Player.name);
+    const {action,playerName,wx,wy,plantId,sx,sy}=msg;
+    const tile=World.get(wx,wy);
+    if(!tile){ console.log('[CLIENT] Tile not found at:', wx, wy); return; }
+    const isMe=playerName===Player.name;
+
+    if(action==='hoe'){
+      if(tile.type==='land'){
+        const dec=World.getDecor(wx,wy);
+        if(dec){
+          World.removeDecor(wx,wy);
+          if(!isMe) UI.particles(sx,sy,'#8B4513',10);
+        } else {
+          tile.type='tilled'; tile.watered=false; tile.crop=null;
+          console.log('[CLIENT] Tile tilled at:', wx, wy);
+          if(!isMe) UI.toast(`📢 ${playerName} 開墾了土地`);
+        }
+      }
+    } else if(action==='plant'){
+      if(tile.type==='tilled'&&!tile.crop&&plantId){
+        const plant=PM[plantId];
+        if(plant){
+          tile.crop={id:plantId,elapsed:0,waterAt:tile.watered?Date.now():0,mature:false};
+          console.log('[CLIENT] Crop planted at:', wx, wy);
+          if(!isMe) UI.toast(`📢 ${playerName} 種下 ${plant.name}`);
+        }
+      }
+    } else if(action==='water'){
+      if(tile.type==='tilled'&&!tile.watered){
+        tile.watered=true; tile.waterAt=Date.now();
+        if(tile.crop) tile.crop.waterAt=Date.now();
+        if(!isMe) UI.toast(`📢 ${playerName} 澆水`);
+      }
+    } else if(action==='harvest'){
+      if(tile.crop&&tile.crop.mature){
+        const plant=PM[tile.crop.id];
+        if(plant){
+          tile.crop=null; tile.watered=false;
+          if(!isMe) UI.toast(`📢 ${playerName} 採收 ${plant.name}`);
+        }
+      }
+    } else if(action==='fill'){
+      if(tile.type==='sea'){
+        tile.type='land'; tile.crop=null; tile.watered=false;
+        if(!isMe) UI.toast(`📢 ${playerName} 填海`);
+      }
+    } else if(action==='catch'){
+      const animal=World.getAnimal(wx,wy);
+      if(animal){
+        World.removeAnimal(wx,wy);
+        if(!isMe) UI.toast(`📢 ${playerName} 捕捉了動物`);
+      }
+    }
+  }
+
+  // ── Input ──
+  function _initInput(){
+    canvas.addEventListener('mousedown',e=>{ dragging=false;dragDist=0;lastMX=e.clientX;lastMY=e.clientY;e.preventDefault(); });
+    canvas.addEventListener('mousemove',e=>{
+      if(!(e.buttons&1)) return;
+      const dx=e.clientX-lastMX,dy=e.clientY-lastMY;
+      dragDist+=Math.abs(dx)+Math.abs(dy);
+      cam.x-=dx/zoom; cam.y-=dy/zoom;
+      lastMX=e.clientX; lastMY=e.clientY;
+      if(dragDist>15) dragging=true;
+    });
+    canvas.addEventListener('mouseup',e=>{ if(!dragging)_click(e.clientX,e.clientY); dragging=false;dragDist=0; });
+    canvas.addEventListener('wheel',e=>{ e.preventDefault(); zoom=Math.max(0.5,Math.min(2,zoom*(e.deltaY<0?1.1:0.9))); },{passive:false});
+
+    canvas.addEventListener('touchstart',e=>{
+      e.preventDefault();
+      if(e.touches.length===1){ lastMX=e.touches[0].clientX;lastMY=e.touches[0].clientY;dragDist=0;dragging=false; }
+      else if(e.touches.length===2){ const[a,b]=e.touches;pinchD=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY); }
+    },{passive:false});
+    canvas.addEventListener('touchmove',e=>{
+      e.preventDefault();
+      if(e.touches.length===1){
+        const dx=e.touches[0].clientX-lastMX,dy=e.touches[0].clientY-lastMY;
+        dragDist+=Math.abs(dx)+Math.abs(dy); cam.x-=dx/zoom; cam.y-=dy/zoom;
+        lastMX=e.touches[0].clientX;lastMY=e.touches[0].clientY;
+        if(dragDist>8) dragging=true;
+      } else if(e.touches.length===2){
+        const[a,b]=e.touches,nd=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+        zoom=Math.max(0.5,Math.min(2,zoom*(nd/pinchD))); pinchD=nd;
+      }
+    },{passive:false});
+    canvas.addEventListener('touchend',e=>{
+      e.preventDefault();
+      if(e.changedTouches.length===1&&dragDist<12) _click(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+    },{passive:false});
+
+    document.addEventListener('keydown',e=>{
+      if(['1','2','3','4','5','6'].includes(e.key)) setTool({1:'hoe',2:'water',3:'seed',4:'harvest',5:'fill',6:'catch'}[e.key]);
+      if(e.key==='s'||e.key==='S') UI.openShop();
+      if(e.key==='b'||e.key==='B') UI.openBarn();
+      if(e.key==='c'||e.key==='C') UI.openShed();
+      if(e.key==='d'||e.key==='D') UI.openSheepdog();
+    });
+  }
+
+  function _click(sx,sy){
+    const wc=s2w(sx,sy),wx=Math.floor(wc.x),wy=Math.floor(wc.y);
+    if(Player.tool==='seed') Net.send('plant',{wx,wy,plantId:Player.seed,sx,sy});
+    else Net.send(Player.tool,{wx,wy,sx,sy});
+  }
+
+  function setTool(t){
+    Player.tool=t;
+    document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+    const m={hoe:'tHoe',water:'tWater',seed:'tSeed',harvest:'tHarvest',fill:'tFill',catch:'tCatch'};
+    if(m[t]) document.getElementById(m[t]).classList.add('active');
+    document.getElementById('seedBar').style.display=(t==='seed')?'flex':'none';
+    if(t==='seed') UI.renderSeedBar();
+  }
+
+  function start(){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('gameScreen').style.display='block';
+    World.ensureVisible(-12,-12,12,12);
+    UI.updateHUD();
+    UI.renderOnlinePanel([{id:'self',name:Player.name,self:true,isAdmin:Player.isAdmin}]);
+    _initInput();
+    running=true;
+    _draw();
+    setInterval(World.tickRespawn,60000);
+    setInterval(World.tickAnimalMovement,1000);
+    setInterval(()=>Sheepdog.tick(),500);
+    // Initialize sheepdog if player has one
+    if(Player.sheepdog>0) Sheepdog.init(0,0);
+    // Sheepdog gift system - check every 20-30 seconds
+    setInterval(()=>{
+      if(Player.sheepdog>=2) Sheepdog.tryBringGift();
+    },20000+Math.random()*10000);
+    // Spawn animals in a wider area, including near player start
+    World.spawnAnimalsNear(0,0,30);
+    // Also spawn more in multiple locations
+    World.spawnAnimalsNear(20,20,20);
+    World.spawnAnimalsNear(-20,-20,20);
+    World.spawnAnimalsNear(20,-20,20);
+    World.spawnAnimalsNear(-20,20,20);
+    setInterval(()=>World.spawnAnimalsNear(0,0,40),30000);
+    // Thief system - tries to steal every 45-90 seconds
+    setInterval(()=>{
+      if(Player.shed&&Object.keys(Player.shed).length>0){
+        const thieves=['老鼠🐀','浣熊🦝','烏鴉🐦‍⬛','狐狸🦊'];
+        const thief=thieves[Math.floor(Math.random()*thieves.length)];
+        const totalLoss=Math.floor(Math.random()*20)+5;
+        const protectedLoss=Math.floor(totalLoss*(Player.getProtection()/100));
+        const actualLoss=totalLoss-protectedLoss;
+        if(actualLoss>0){
+          Player.gold=Math.max(0,Player.gold-actualLoss);
+          UI.updateHUD();
+          UI.toast(`⚠️ ${thief}偷走了 💵${actualLoss}！`);
+        } else if(Player.getProtection()>0){
+          UI.toast(`🐕 牧羊犬成功阻擋了${thief}！`);
+        }
+      }
+    },45000+Math.random()*45000);
+    // Start day/night cycle
+    DayNight.start();
+    // Auto-show collect notification every 10s
+    setInterval(()=>{
+      let ready=0;
+      for(const [type,data] of Object.entries(Player.shed)){
+        const a=AM[type];
+        if(!a) continue;
+        const elapsed=Date.now()-data.lastCollect;
+        if(elapsed>=a.produceTime) ready++;
+      }
+      if(ready>0) document.getElementById('hCollect').textContent=ready;
+    },10000);
+    // Broadcast position if online
+    if(Net.connected) setInterval(()=>{
+      const c=getCam(); Net.send('pos',{wx:Math.round(c.wx),wy:Math.round(c.wy),color:Player.color});
+    },2000);
+  }
+
+  return {start,setTool,handleAction,handleRemoteAction,applyWorldState,getCam};
+})();
+window.G=G;
+
+// ════════════ AUTH ════════════
+const Auth = {
+  login(){
+    const u=document.getElementById('inUser').value.trim();
+    const p=document.getElementById('inPass').value;
+    const srv=document.getElementById('inServer').value.trim();
+    const errEl=document.getElementById('loginErr');
+    errEl.textContent='';
+
+    if(!u){ errEl.textContent='請輸入玩家名稱'; return; }
+
+    // Admin check
+    if(u===ADMIN_USER){
+      if(p!==ADMIN_PASS){ errEl.textContent='管理員密碼錯誤！'; return; }
+      Player.isAdmin=true;
+      Player.color='#f87171';
+    } else {
+      Player.isAdmin=false;
+      // Assign color based on username hash
+      let h=0; for(let i=0;i<u.length;i++) h=(h*31+u.charCodeAt(i))&0xff;
+      Player.color=PLAYER_COLORS[h%PLAYER_COLORS.length];
+    }
+
+    Player.name=u;
+    document.getElementById('hudPlayer').textContent='👤 '+u;
+    if(Player.isAdmin){
+      document.getElementById('hudAdmin').style.display='';
+      document.getElementById('tAdmin').style.display='';
+    }
+
+    if(srv) Net.connect(srv.startsWith('ws')?srv:`ws://${srv}`,u);
+    G.start();
+    Social.init();
+  }
+};
+window.Auth=Auth;
+
+// ════════════ ADMIN ════════════
+let dayCyclePaused=false;
+const Admin = {
+  open(){
+    if(!Player.isAdmin){ UI.toast('需要管理員權限'); return; }
+    const s=World.stats();
+    document.getElementById('adTiles').textContent=s.tiles.toLocaleString();
+    document.getElementById('adDecors').textContent=s.decors;
+    const musicBtn=document.getElementById('adMusicBtn');
+    musicBtn.textContent=Music.playing?'⏸ 暫停音樂':'🎵 開啟音樂';
+    // Player list
+    const pl=document.getElementById('adPlayerList');
+    pl.innerHTML=`<div class="admin-player-row"><span>👤 ${Player.name} (你) ${Player.isAdmin?'[ADMIN]':''}</span><span style="color:var(--gold)">💵${Player.gold}</span></div>`;
+    for(const id in RemotePlayers.list){
+      const rp=RemotePlayers.list[id];
+      pl.innerHTML+=`<div class="admin-player-row"><span>👤 ${rp.name}</span><span style="color:var(--muted)">在線</span></div>`;
+    }
+    document.getElementById('adminScreen').style.display='flex';
+  },
+  close(){ document.getElementById('adminScreen').style.display='none'; },
+  giveGold(){ Player.earn(1000); UI.toast('💵 管理員：獲得1000金幣'); this.open(); },
+  clearDecors(){
+    for(const d of World.decors) if(!d.removed){ d.removed=true; d.removedAt=Date.now(); delete World.decorMap[`${d.wx},${d.wy}`]; }
+    UI.toast('✅ 已清除所有裝飾物'); this.open();
+  },
+  respawnDecors(){
+    let count=0;
+    for(const k in World.tiles){
+      const tile=World.tiles[k];
+      if(tile.type!=='land') continue;
+      const [wx,wy]=k.split(',').map(Number);
+      if(World.decorMap[k]==null && Math.random()<0.06){
+        World._addDecor(wx,wy,Math.random()<0.6?'tree':'rock');
+        count++;
+      }
+    }
+    UI.toast(`✅ 重生 ${count} 個裝飾物`); this.open();
+  },
+  teleportCenter(){ UI.toast('傳送回中心'); Admin.close(); },
+  resetWorld(){ if(!confirm('確定重置整個世界？此操作不可逆！')) return; location.reload(); },
+  toggleMusic(){
+    if(!Music.playing){ Music.start(); UI.toast('🎵 音樂已開啟'); }
+    else { Music.stop(); UI.toast('⏸ 音樂已暫停'); }
+    this.open();
+  },
+  skipToDay(){
+    DayNight.skipToDay();
+    UI.toast('☀️ 跳到白天');
+    this.open();
+  },
+  skipToNight(){
+    DayNight.skipToNight();
+    UI.toast('🌙 跳到夜晚');
+    this.open();
+  },
+  toggleDayCycle(){
+    dayCyclePaused=!dayCyclePaused;
+    if(dayCyclePaused){
+      clearInterval(DayNight._timer);
+      UI.toast('⏸ 晝夜循環已暫停');
+    } else {
+      DayNight.start();
+      UI.toast('▶ 晝夜循環已恢復');
+    }
+    this.open();
+  },
+};
+window.Admin=Admin;
+
+// ════════════ UI ════════════
+const UI = (()=>{
+  let toastT=null;
+
+  // Draw blueberry as canvas image for UI
+  function _bbImg(){
+    const c=document.createElement('canvas');
+    c.width=32; c.height=32;
+    const x=c.getContext('2d');
+    const r=5;
+    const bs=[{x:-3,y:-2},{x:3,y:-2},{x:0,y:2},{x:-5,y:4},{x:5,y:4}];
+    x.fillStyle='#2d5a27'; x.beginPath(); x.ellipse(16,5,4,2.5,0,0,Math.PI*2); x.fill();
+    for(const b of bs){ x.fillStyle='#4f66b8'; x.beginPath(); x.arc(16+b.x,16+b.y,r,0,Math.PI*2); x.fill(); x.fillStyle='#6b8ae0'; x.beginPath(); x.arc(15+b.x,15+b.y,2,0,Math.PI*2); x.fill(); }
+    return c.toDataURL();
+  }
+  
+  // Get crop icon (blueberry uses image, others use emoji)
+  function _cropIcon(id, emoji){
+    return id==='blueberry'?'<img src="'+_bbImg()+'" style="width:28px;height:28px">':emoji;
+  }
+
+  function updateHUD(){
+    document.getElementById('hG').textContent=Player.gold;
+    document.getElementById('hD').textContent=Player.dirt;
+    document.getElementById('hW').textContent=Player.wood;
+    document.getElementById('hS').textContent=Player.stone;
+  }
+
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastT);
+    toastT=setTimeout(()=>t.classList.remove('show'),2200);
+  }
+
+  function particles(sx,sy,color,n=8){
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');
+      p.className='pt';
+      const a=(Math.PI*2/n)*i,d=26+Math.random()*26;
+      p.style.cssText=`left:${sx-4}px;top:${sy-4}px;width:8px;height:8px;background:${color};--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px`;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),700);
+    }
+  }
+
+  function renderOnlinePanel(list){
+    document.getElementById('playerList').innerHTML=list.map(p=>
+      `<div class="op-row"><div class="op-dot${p.self?' self':p.isAdmin?' admin':''}"></div>${p.name}${p.isAdmin?' 🔴':''}</div>`
+    ).join('');
+  }
+
+  // ── Seed Bar ──
+  function renderSeedBar(){
+    const bar=document.getElementById('seedBar');
+    bar.innerHTML='';
+    for(const id of Player.quickSeeds){
+      const pl=PM[id]; if(!pl) continue;
+      const b=document.createElement('div');
+      b.className='qseed'+(Player.seed===id?' active':'');
+      const icon=id==='blueberry'?'<img src="'+_bbImg()+'" style="width:20px;height:20px">':pl.e;
+      b.innerHTML=icon+`<span class="qc">💵${pl.sc}</span>`;
+      b.title=pl.name;
+      b.onclick=()=>{ Player.seed=id; renderSeedBar(); toast(`選擇 ${pl.e} ${pl.name}`); };
+      bar.appendChild(b);
+    }
+    const more=document.createElement('div');
+    more.className='qseed'; more.textContent='＋'; more.title='更多種子';
+    more.onclick=()=>openSeedPicker();
+    bar.appendChild(more);
+  }
+
+  // ── Shop ──
+  let shopTier=0;
+  function openShop(){
+    _buildTabs('shopTabs',shopTier,t=>{ shopTier=t; openShop(); });
+    const list=shopTier?PLANTS.filter(p=>p.tier===shopTier):PLANTS;
+    document.getElementById('shopGrid').innerHTML=list.map(p=>`
+      <div class="si" onclick="UI._qp('${p.id}')">
+        <span class="tb tb${p.tier}">${TNAMES[p.tier]}</span>
+        <div class="sie">${_cropIcon(p.id,p.e)}</div>
+        <div class="sin">${p.name}</div>
+        <div class="sip">💵${p.sc}/顆</div>
+        <div class="sipr">利潤+${p.sp-p.sc}</div>
+        <div class="sit">⏱${Math.round(p.gt/1000)}s</div>
+      </div>`).join('');
+    openModal('shopModal');
+  }
+
+  // ── Seed Picker ──
+  let seedTier=0;
+  function openSeedPicker(){
+    G.setTool('seed');
+    _buildTabs('seedTabs',seedTier,t=>{ seedTier=t; openSeedPicker(); });
+    const list=seedTier?PLANTS.filter(p=>p.tier===seedTier):PLANTS;
+    document.getElementById('seedGrid').innerHTML=list.map(p=>`
+      <div class="si${Player.seed===p.id?'" style="border-color:var(--gold);background:var(--gold-d)':''}" onclick="UI._ps('${p.id}')">
+        <span class="tb tb${p.tier}">${TNAMES[p.tier]}</span>
+        <div class="sie">${_cropIcon(p.id,p.e)}</div>
+        <div class="sin">${p.name}</div>
+        <div class="sip">💵${p.sc}/顆</div>
+        <div class="sipr">利潤+${p.sp-p.sc}</div>
+      </div>`).join('');
+    openModal('seedModal');
+  }
+
+  function _buildTabs(elId,active,cb){
+    document.getElementById(elId).innerHTML=
+      `<button class="tab${active===0?' active':''}" onclick="(${cb.toString()})(0)">全部</button>`+
+      [1,2,3,4].map(t=>`<button class="tab${active===t?' active':''}" onclick="(${cb.toString()})(${t})">${TNAMES[t]}</button>`).join('');
+  }
+
+  // ── Barn ──
+  function openBarn(){
+    const entries=Object.entries(Player.barn).filter(([,c])=>c>0);
+    let total=0; entries.forEach(([id,c])=>{
+      const p=PM[id]||AM[id];
+      if(p?.sp) total+=p.sp*c;
+      else if(p?.productPrice) total+=p.productPrice*c;
+    });
+    document.getElementById('barnTotal').textContent=`💵 ${total}`;
+    const animalEmojis={chicken:'🐔',cow:'🐄',pig:'🐷',sheep:'🐑',duck:'🦆',rabbit:'🐰'};
+    document.getElementById('barnGrid').innerHTML=entries.length
+      ?entries.map(([id,c])=>{
+        const p=PM[id]||AM[id];
+        if(!p)return '';
+        const val=p.sp||(p.product?p.productPrice:0)||0;
+        const isAnimal=!!AM[id];
+        const isProduct=!!p.product;
+        const icon=isAnimal?(animalEmojis[id]||'🐾'):_cropIcon(id,p.e);
+        return `<div class="bi"><div class="bie">${icon}</div><div class="bin">${p.name}</div><div class="bic">x${c}</div><div class="biv">💵${val}/個</div><button class="bsell" onclick="UI._sa('${id}')">全部賣出 💵${val*c}</button></div>`;
+      }).join('')
+      :'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:20px">穀倉是空的</p>';
+    openModal('barnModal');
+  }
+
+  // ── Shed ──
+  function openShed(){
+    const entries=Object.entries(Player.shed).filter(([,d])=>d.count>0);
+    document.getElementById('shedGrid').innerHTML=entries.length
+      ?entries.map(([type,data])=>{
+        const a=AM[type];
+        if(!a)return '';
+        const elapsed=Date.now()-data.lastCollect;
+        const progress=Math.min(elapsed/a.produceTime,1);
+        const ready=progress>=1;
+        return `<div class="bi"><div class="bie">${ANIMAL_EMOJI[type]||'🐾'}</div><div class="bin">${a.name} x${data.count}</div><div class="bic">產${a.productName}</div><div class="biv">${ready?'✅':'⏳'}${Math.round(progress*100)}%</div></div>`;
+      }).join('')
+      :'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:20px">畜棚是空的<br><small>捕捉動物放到畜棚會自動產出物資</small></p>';
+    openModal('shedModal');
+  }
+
+  function openSheepdog(){
+    const level=Player.sheepdog;
+    const current=SHEEPDOG_LEVELS[level];
+    const next=SHEEPDOG_LEVELS[level+1];
+    const infoDiv=document.getElementById('sheepdogInfo');
+    const upgradeBtn=document.getElementById('upgradeSheepdogBtn');
+    
+    let html=`<div style="text-align:center;margin-bottom:15px">`;
+    html+=`<div style="font-size:3rem;margin:10px 0">🐕</div>`;
+    html+=`<div style="font-size:1.2rem;font-weight:bold;color:var(--gold)">${current.name}</div>`;
+    html+=`<div style="color:var(--text);margin:5px 0">${current.desc}</div>`;
+    html+=`<div style="font-size:1.5rem;font-weight:bold;color:#4ade80">保護率: ${current.protect}%</div>`;
+    html+=`</div>`;
+    
+    if(next){
+      html+=`<div style="background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:10px;padding:12px;margin-bottom:10px">`;
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center">`;
+      html+=`<div><div style="font-weight:bold">下一級: ${next.name}</div><div style="font-size:.8rem;color:var(--muted)">保護率: ${next.protect}%</div></div>`;
+      html+=`<div style="color:${Player.canAfford(next.cost)?'#4ade80':'#f87171'}">💵${next.cost}</div>`;
+      html+=`</div></div>`;
+      upgradeBtn.style.display='';
+    } else {
+      html+=`<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px;text-align:center;color:#4ade80">🎉 已是最高等級！完全保護！</div>`;
+      upgradeBtn.style.display='none';
+    }
+    
+    infoDiv.innerHTML=html;
+    openModal('sheepdogModal');
+  }
+
+  function upgradeSheepdog(){
+    if(Player.upgradeSheepdog()){
+      openSheepdog();
+    }
+  }
+
+  function openModal(id){ document.getElementById(id).classList.add('open'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+  return {
+    updateHUD,toast,particles,renderOnlinePanel,renderSeedBar,
+    openShop,openSeedPicker,openBarn,openShed,openSheepdog,upgradeSheepdog,openModal,closeModal,
+    _qp(id){ Player.seed=id; G.setTool('seed'); closeModal('shopModal'); toast(`✅ 選 ${PM[id].e} ${PM[id].name}，點耕地種植！`); },
+    _ps(id){ Player.seed=id; if(!Player.quickSeeds.includes(id)) Player.quickSeeds[3]=id; closeModal('seedModal'); renderSeedBar(); toast(`${PM[id].e} ${PM[id].name} 每顆 💵${PM[id].sc}`); },
+    _sa(id){ const p=PM[id]||AM[id],c=Player.barn[id]||0; if(!c||!p)return; Player.earn((p.sp||p.productPrice)*c); Player.barn[id]=0; toast(`賣出 ${p.name}x${c} → 💵+${(p.sp||p.productPrice)*c}`); openBarn(); },
+  };
+})();
+window.UI=UI;
+
+// Enter key login
+document.getElementById('inPass').addEventListener('keydown',e=>{ if(e.key==='Enter') Auth.login(); });
+document.getElementById('inServer').addEventListener('keydown',e=>{ if(e.key==='Enter') Auth.login(); });
+
+// Draw stone icon for HUD
+window.addEventListener('load',()=>{
+  const el=document.getElementById('stoneIcon');
+  if(el){
+    const c=document.createElement('canvas');
+    c.width=18; c.height=18;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#78909c';ctx.beginPath();ctx.ellipse(9,11,7,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#90a4ae';ctx.beginPath();ctx.ellipse(8,9,5.5,4,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#b0bec5';ctx.beginPath();ctx.ellipse(6,7,2.5,2,0,0,Math.PI*2);ctx.fill();
+    el.style.background=`url(${c.toDataURL()})`;
+    el.style.backgroundSize='contain';
+    el.style.display='inline-block';
+    el.style.width='18px';
+    el.style.height='18px';
+    el.style.verticalAlign='middle';
+  }
+});
+</script>
+</body>
+</html>

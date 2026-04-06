@@ -1,0 +1,12 @@
+app = "island-farm-game"
+primary_region = "hkg"
+
+[[services]]
+  internal_port = 3000
+
+  [[services.ports]]
+    handlers = ["tls", "http1"]
+    port = 443
+
+  [[services.ports]]
+    port = 80
